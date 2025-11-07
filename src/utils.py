@@ -1,8 +1,16 @@
-from pyray  import * 
+import pyray  as pr
+import raylib as rl
 from enum   import Enum
 from typing import Dict, List
 
 #import pdb
+
+BGCOLOR = pr.Color(0, 34, 43, 255)
+MAX_FILEPATH_RECORDED = 256
+MAX_FILEPATH_SIZE = 512
+panelScroll = pr.Vector2(0, 0)
+panelView = pr.Rectangle(0, 0, 0, 0)
+
 
 GRID_COLS = 12
 GRID_ROWS = 12
@@ -124,8 +132,37 @@ transition_table: Dict[State, Dict[Event, State]] = {
 }
 
 class MediaPlayer:
-  def __init__(self, initial_state: State = State.WAITING) -> None:
-    self.current_state = initial_state;
+    def __init__(self, initial_state: State = State.WAITING) -> None:
+        self.currentState = initial_state
+
+        # --- File management ---
+        self.filePaths: list[str] = []         # list of file paths
+        self.filePathCounter: int = 0          # number of files loaded
+        self.currentTrackIndex: int = 0        # index of selected track
+
+        # --- Playback ---
+        self.isPlaying: bool = False
+        self.currentTime: float = 0.0
+        self.totalTime: float = 0.0
+        self.volume: float = 1.0
+
+        # --- Audio data (if using raylib) ---
+        self.music = None  # raylib.Music object or None
+
+    # Optional helper method
+    def add_file(self, path: str) -> None:
+        self.filePaths.append(path)
+        self.filePathCounter = len(self.filePaths)
+
+    def next_track(self) -> None:
+        if self.filePaths:
+            self.currentTrackIndex = (self.currentTrackIndex + 1) % len(self.filePaths)
+
+    def prev_track(self) -> None:
+        if self.filePaths:
+            self.currentTrackIndex = (self.currentTrackIndex - 1) % len(self.filePaths)
+
+
 
 # not sure -> bool
 def update_state(media_player: MediaPlayer, event: Event) -> bool:
@@ -143,12 +180,13 @@ def update_state(media_player: MediaPlayer, event: Event) -> bool:
 def init_raylib():
   screen_w = 800
   screen_h = 600
-  set_config_flags(FLAG_WINDOW_RESIZABLE)
-  init_window(screen_w, screen_h, "Media Player")
-  set_target_fps(30);
+  pr.set_config_flags(pr.FLAG_WINDOW_RESIZABLE)
+  pr.init_window(screen_w, screen_h, "Media Player")
+  pr.set_target_fps(30);
+  rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
 def return_layout(media_player: MediaPlayer) -> List[List[int]]:  
-  match media_player.current_state: 
+  match media_player.currentState: 
     case State.PLAY:
       return _map_state_play
     case State.WAITING | State.PAUSE | State.STOP | State.PREV | State.NEXT:
@@ -157,40 +195,101 @@ def return_layout(media_player: MediaPlayer) -> List[List[int]]:
       return _map_default
   
 def render_ui(media_player: MediaPlayer) -> None:
-
   layout  = return_layout(media_player);
 
-  width = get_screen_width();
-  height = get_screen_height();
+  width = pr.get_screen_width();
+  height = pr.get_screen_height();
   cell_width = width / GRID_COLS;
   cell_height = height / GRID_ROWS;
 
-#  breakpoint()
   for row, row_data in enumerate(layout):
     for col, element in enumerate(row_data):
       cell_x = col * cell_width;
       cell_y = row * cell_height;
 
-      drop_files_bounds   = Rectangle( cell_x, cell_y, cell_width * 12, cell_height * 11)
-      control_btn_bounds  = Rectangle(cell_x, cell_y, cell_width, cell_height)
+      drop_files_bounds   = pr.Rectangle(cell_x, cell_y, cell_width * 12, cell_height * 11)
+      control_btn_bounds  = pr.Rectangle(cell_x, cell_y, cell_width, cell_height)
+      progress_bar_bounds = pr.Rectangle(cell_x, cell_y, cell_width * 8, cell_height / 2)
+      volume_bar_bounds   = pr.Rectangle(cell_x, cell_y + (cell_height / 2), cell_width * (7), cell_height / 2)
 
-      progress_bar_bounds = Rectangle(cell_x, cell_y, cell_width * 8, cell_height / 2)
-      volume_bar_bounds   = Rectangle( cell_x, cell_y + (cell_height / 2), cell_width * (7), cell_height / 2)
+      scroll  = pr.Vector2(0, 0, 0, 0)
+      curr_pos = pr.ffi.new('float *', 1.0)
+      view = pr.Rectangle(0,0,0,0);
 
-      scroll  = Vector2(0, 0, 0, 0)
-      content = Rectangle(0, 0, 0, 0)
-
-      view = Rectangle(0,0,0,0);
-
+#      panelRec = pr.Rectangle(100, 50, 300, 200)
+#      panelContentRec = pr.Rectangle(0, 0, panelRec.width, max(panelRec.height, GRID_ROWS * cell_y))
       match element: 
         case Element.EL_BLANK.value: 
           pass
+        case Element.EL_PROGRESS_BAR.value: 
+          pr.gui_progress_bar(progress_bar_bounds,"","",curr_pos,0,10)
 
         case Element.EL_BTN_PLAY.value:
-          gui_button(Rectangle(10,10,100,32),"TEST")
-         
+          pr.gui_button(control_btn_bounds, ">")
 
+        case Element.EL_BTN_PAUSE.value:
+          pr.gui_button(control_btn_bounds, "||")
+
+        case Element.EL_BTN_STOP.value:
+          pr.gui_button(control_btn_bounds, "[]")
+
+        case Element.EL_BTN_NEXT.value:
+          pr.gui_button(control_btn_bounds, ">>")
+
+        case Element.EL_DROP_FILES.value:
+
+          pr.gui_scroll_panel(drop_files_bounds, b"Files", drop_files_bounds, panelScroll, panelView)
+          pr.begin_scissor_mode(int(panelView.x), int(panelView.y), int(panelView.width), int(panelView.height))
+          
+          data = media_player
+          for i in range(data.filePathCounter):
+              path = data.filePaths[i]
+              if isinstance(path, str):
+                  path_bytes = path.encode('utf-8')
+              else:
+                  path_bytes = path  # assume already bytes
+          
+              file_name = pr.get_file_name(path_bytes)
+          
+              x = int(drop_files_bounds.x + panelScroll.x + (cell_height / 6.0))
+              y = int(drop_files_bounds.y + panelScroll.y + (cell_height / 2.0) * (i + 1))
+          
+              if data.currentTrackIndex == i:
+                  pr.draw_rectangle(
+                      int(drop_files_bounds.x + panelScroll.x),
+                      int(y - (cell_height / 2.0)),
+                      int(drop_files_bounds.width),
+                      int(cell_height / 2.0),
+                      pr.fade(pr.YELLOW, 0.0) 
+                  )
+                  pr.draw_text(file_name, x, y, int(cell_height / 2.0), pr.YELLOW)
+          
+              else:
+                  pr.draw_rectangle(
+                      int(drop_files_bounds.x + panelScroll.x),
+                      int(y - (cell_height / 2.0)),
+                      int(drop_files_bounds.width),
+                      int(cell_height / 2.0),
+                      pr.fade(pr.LIGHTGRAY, 0.0)
+                  )
+                  pr.draw_text(file_name, x, y, int(cell_height / 2.0), pr.WHITE)
+          
+          pr.end_scissor_mode()
 
 
  
+def draw_file_list(data, drop_files_bounds, cell_height, font_size):
+    for i, path in enumerate(data.filePaths):
+        file_name = pr.get_file_name(path)
+        x = int(drop_files_bounds.x + cell_height / 6)
+        y = int(drop_files_bounds.y + (cell_height / 2) * (i + 1))
+        pr.draw_rectangle(
+            int(drop_files_bounds.x),
+            int(drop_files_bounds.y + (cell_height / 2.0) * (i + 1)),
+            int(drop_files_bounds.width),
+            int(cell_height / 2),
+            pr.fade(pr.LIGHTGRAY, 0.5)
+        )
+        color = pr.YELLOW if i == data.currentTrackIndex else pr.WHITE
+        pr.draw_text(file_name, x, y, font_size, color)
 

@@ -1,0 +1,37 @@
+| Function / Constant             | Module   | Reason / Purpose                                       |
+| ------------------------------- | -------- | ------------------------------------------------------ |
+| `raylib.LoadMusicStream()`      | `raylib` | Not wrapped in `pyray`; needed for music/audio streams |
+| `raylib.PlayMusicStream()`      | `raylib` | Low-level audio control                                |
+| `raylib.UpdateMusicStream()`    | `raylib` | Maintain audio buffer playback                         |
+| `raylib.UnloadMusicStream()`    | `raylib` | Free music stream memory                               |
+| `raylib.StopMusicStream()`      | `raylib` | Stop playback                                          |
+| `raylib.Music`                  | `raylib` | Struct type definition for music                       |
+| `raylib.Sound`                  | `raylib` | Struct for loaded sounds                               |
+| `raylib.LoadSound()`            | `raylib` | Low-level sound loading                                |
+| `raylib.PlaySound()`            | `raylib` | Play short sounds (SFX)                                |
+| `raylib.StopSound()`            | `raylib` | Stop SFX playback                                      |
+| `raylib.IsMusicStreamPlaying()` | `raylib` | Check stream state                                     |
+| `raylib.SetMusicVolume()`       | `raylib` | Control playback volume                                |
+| `raylib.InitAudioDevice()`      | `raylib` | Must be called before any audio use                    |
+| `raylib.CloseAudioDevice()`     | `raylib` | Clean shutdown for audio subsystem                     |
+
+
+
+
+| Function / Constant         | Module  | Reason / Purpose                   |
+| --------------------------- | ------- | ---------------------------------- |
+| `init_window()`             | `pyray` | High-level window creation wrapper |
+| `close_window()`            | `pyray` | Graceful shutdown                  |
+| `window_should_close()`     | `pyray` | Event loop control                 |
+| `begin_drawing()`           | `pyray` | Start a frame                      |
+| `end_drawing()`             | `pyray` | End a frame                        |
+| `clear_background()`        | `pyray` | Fill screen with color             |
+| `draw_text()`               | `pyray` | Draw strings easily                |
+| `draw_rectangle()`          | `pyray` | High-level shape drawing           |
+| `RAYWHITE`, `BLACK`, etc.   | `pyray` | Predefined color constants         |
+| `set_target_fps()`          | `pyray` | Frame rate control                 |
+| `get_frame_time()`          | `pyray` | Delta time calculation             |
+| `get_mouse_position()`      | `pyray` | Get mouse coordinates              |
+| `is_key_down()`             | `pyray` | Keyboard input                     |
+| `is_mouse_button_pressed()` | `pyray` | Mouse input                        |
+
