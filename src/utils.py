@@ -231,45 +231,11 @@ def render_ui(media_player: MediaPlayer) -> None:
           pr.gui_scroll_panel(drop_files_bounds, b"Files", drop_files_bounds, panelScroll, panelView)
           pr.begin_scissor_mode(int(panelView.x), int(panelView.y), int(panelView.width), int(panelView.height))
           data = media_player
-          draw_file_list(data, drop_files_bounds, cell_height)
+          draw_file_list(data, drop_files_bounds, cell_width, cell_height)
           pr.end_scissor_mode()
 
-"""
-          for i in range(data.filePathCounter):
-              path = data.filePaths[i]
-              if isinstance(path, str):
-                  path_bytes = path.encode('utf-8')
-              else:
-                  path_bytes = path  
-          
-              file_name = pr.get_file_name(path_bytes)
-          
-              x = int(drop_files_bounds.x + panelScroll.x + (cell_height / 6.0))
-              y = int(drop_files_bounds.y + panelScroll.y + (cell_height / 2.0) * (i + 1))
-          
-              if data.currentTrackIndex == i:
-                  pr.draw_rectangle(
-                      int(drop_files_bounds.x + panelScroll.x),
-                      int(y - (cell_height / 2.0)),
-                      int(drop_files_bounds.width),
-                      int(cell_height / 2.0),
-                      pr.fade(pr.YELLOW, 0.0) 
-                  )
-                  pr.draw_text(file_name, x, y, int(cell_height / 2.0), pr.YELLOW)
-          
-              else:
-                  pr.draw_rectangle(
-                      int(drop_files_bounds.x + panelScroll.x),
-                      int(y - (cell_height / 2.0)),
-                      int(drop_files_bounds.width),
-                      int(cell_height / 2.0),
-                      pr.fade(pr.LIGHTGRAY, 0.0)
-                  )
-                  pr.draw_text(file_name, x, y, int(cell_height / 2.0), pr.WHITE)
-          pr.end_scissor_mode()
-"""
- 
-def draw_file_list(data, bounds, cell_height):
+
+def draw_file_list(data, bounds, cell_width, cell_height):
   for i in range(data.filePathCounter):
       path = data.filePaths[i]
       if isinstance(path, str):
@@ -279,8 +245,8 @@ def draw_file_list(data, bounds, cell_height):
   
       file_name = pr.get_file_name(path_bytes)
   
-      x = int((bounds.x + panelScroll.x))
-      y = int((bounds.y + panelScroll.y+cell_height) * (i+1))
+      x = int((bounds.x + panelScroll.x) + (cell_width/2.0))
+      y = int(bounds.y + panelScroll.y + cell_height * (i+2))
       pr.draw_rectangle(
         x, 
         y, 
@@ -289,6 +255,6 @@ def draw_file_list(data, bounds, cell_height):
         pr.fade(pr.YELLOW, 0.0))
  
       color = pr.YELLOW if i == data.currentTrackIndex else pr.WHITE
-      pr.draw_text(file_name, x, y, int(cell_height), color)
+      pr.draw_text(file_name, x, y, int(cell_height/1.5), color)
          
 
