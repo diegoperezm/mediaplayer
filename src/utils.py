@@ -10,7 +10,7 @@ MAX_FILEPATH_RECORDED = 256
 MAX_FILEPATH_SIZE = 512
 panelScroll = pr.Vector2(0, 0)
 panelView = pr.Rectangle(0, 0, 0, 0)
-
+curr_pos = pr.ffi.new('float *', 1.0)
 
 GRID_COLS = 12
 GRID_ROWS = 12
@@ -135,21 +135,17 @@ class MediaPlayer:
     def __init__(self, initial_state: State = State.WAITING) -> None:
         self.currentState = initial_state
 
-        # --- File management ---
-        self.filePaths: list[str] = []         # list of file paths
-        self.filePathCounter: int = 0          # number of files loaded
-        self.currentTrackIndex: int = 0        # index of selected track
+        self.filePaths: list[str] = []         
+        self.filePathCounter: int = 0          
+        self.currentTrackIndex: int = 0        
 
-        # --- Playback ---
         self.isPlaying: bool = False
         self.currentTime: float = 0.0
         self.totalTime: float = 0.0
         self.volume: float = 1.0
 
-        # --- Audio data (if using raylib) ---
-        self.music = None  # raylib.Music object or None
+        self.music = None  # rl.Music object or None
 
-    # Optional helper method
     def add_file(self, path: str) -> None:
         self.filePaths.append(path)
         self.filePathCounter = len(self.filePaths)
@@ -212,12 +208,7 @@ def render_ui(media_player: MediaPlayer) -> None:
       progress_bar_bounds = pr.Rectangle(cell_x, cell_y, cell_width * 8, cell_height / 2)
       volume_bar_bounds   = pr.Rectangle(cell_x, cell_y + (cell_height / 2), cell_width * (7), cell_height / 2)
 
-      scroll  = pr.Vector2(0, 0, 0, 0)
-      curr_pos = pr.ffi.new('float *', 1.0)
-      view = pr.Rectangle(0,0,0,0);
 
-#      panelRec = pr.Rectangle(100, 50, 300, 200)
-#      panelContentRec = pr.Rectangle(0, 0, panelRec.width, max(panelRec.height, GRID_ROWS * cell_y))
       match element: 
         case Element.EL_BLANK.value: 
           pass
@@ -237,17 +228,19 @@ def render_ui(media_player: MediaPlayer) -> None:
           pr.gui_button(control_btn_bounds, ">>")
 
         case Element.EL_DROP_FILES.value:
-
           pr.gui_scroll_panel(drop_files_bounds, b"Files", drop_files_bounds, panelScroll, panelView)
           pr.begin_scissor_mode(int(panelView.x), int(panelView.y), int(panelView.width), int(panelView.height))
-          
           data = media_player
+          draw_file_list(data, drop_files_bounds, cell_height)
+          pr.end_scissor_mode()
+
+"""
           for i in range(data.filePathCounter):
               path = data.filePaths[i]
               if isinstance(path, str):
                   path_bytes = path.encode('utf-8')
               else:
-                  path_bytes = path  # assume already bytes
+                  path_bytes = path  
           
               file_name = pr.get_file_name(path_bytes)
           
@@ -273,23 +266,29 @@ def render_ui(media_player: MediaPlayer) -> None:
                       pr.fade(pr.LIGHTGRAY, 0.0)
                   )
                   pr.draw_text(file_name, x, y, int(cell_height / 2.0), pr.WHITE)
-          
           pr.end_scissor_mode()
-
-
+"""
  
-def draw_file_list(data, drop_files_bounds, cell_height, font_size):
-    for i, path in enumerate(data.filePaths):
-        file_name = pr.get_file_name(path)
-        x = int(drop_files_bounds.x + cell_height / 6)
-        y = int(drop_files_bounds.y + (cell_height / 2) * (i + 1))
-        pr.draw_rectangle(
-            int(drop_files_bounds.x),
-            int(drop_files_bounds.y + (cell_height / 2.0) * (i + 1)),
-            int(drop_files_bounds.width),
-            int(cell_height / 2),
-            pr.fade(pr.LIGHTGRAY, 0.5)
-        )
-        color = pr.YELLOW if i == data.currentTrackIndex else pr.WHITE
-        pr.draw_text(file_name, x, y, font_size, color)
+def draw_file_list(data, bounds, cell_height):
+  for i in range(data.filePathCounter):
+      path = data.filePaths[i]
+      if isinstance(path, str):
+          path_bytes = path.encode('utf-8')
+      else:
+          path_bytes = path  
+  
+      file_name = pr.get_file_name(path_bytes)
+  
+      x = int((bounds.x + panelScroll.x))
+      y = int((bounds.y + panelScroll.y+cell_height) * (i+1))
+      pr.draw_rectangle(
+        x, 
+        y, 
+        int(bounds.width),
+        int(cell_height),
+        pr.fade(pr.YELLOW, 0.0))
+ 
+      color = pr.YELLOW if i == data.currentTrackIndex else pr.WHITE
+      pr.draw_text(file_name, x, y, int(cell_height), color)
+         
 
