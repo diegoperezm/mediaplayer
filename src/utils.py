@@ -11,6 +11,7 @@ MAX_FILEPATH_SIZE = 512
 panelScroll = pr.Vector2(0, 0)
 panelView = pr.Rectangle(0, 0, 0, 0)
 curr_pos = pr.ffi.new('float *', 1.0)
+curr_vol_level = pr.ffi.new('float *', 1.0)
 
 GRID_COLS = 12
 GRID_ROWS = 12
@@ -47,43 +48,43 @@ class Element(Enum):
 _map_default: List[List[int]] = [[0] * SIZE_COLS for _ in range(SIZE_ROWS)]
 
 _map_state_waiting: List[List[int]] = [
-    [Element.EL_DROP_FILES.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
+    [Element.EL_DROP_FILES.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
     [Element.EL_BTN_PREV.value,
      Element.EL_BTN_PLAY.value,
      Element.EL_BTN_STOP.value,
      Element.EL_BTN_NEXT.value,
      Element.EL_PROGRESS_BAR.value,
-     Element.EL_VOLUME_SLIDER.value],
+     Element.EL_VOLUME_SLIDER.value,0,0,0,0,0,0],
 ]
 
 _map_state_play: List[List[int]] = [
-    [Element.EL_DROP_FILES.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0],
+    [Element.EL_DROP_FILES.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
+    [Element.EL_BLANK.value, 0, 0, 0, 0, 0,0,0,0,0,0,0],
     [Element.EL_BTN_PREV.value,
      Element.EL_BTN_PAUSE.value,  # <- Different from waiting
      Element.EL_BTN_STOP.value,
      Element.EL_BTN_NEXT.value,
      Element.EL_PROGRESS_BAR.value,
-     Element.EL_VOLUME_SLIDER.value],
+     Element.EL_VOLUME_SLIDER.value,0,0,0,0,0,0],
 ]
 
 transition_table: Dict[State, Dict[Event, State]] = {
@@ -215,6 +216,9 @@ def render_ui(media_player: MediaPlayer) -> None:
         case Element.EL_PROGRESS_BAR.value: 
           pr.gui_progress_bar(progress_bar_bounds,"","",curr_pos,0,10)
 
+        case Element.EL_BTN_PREV.value:
+          pr.gui_button(control_btn_bounds, "<<")
+
         case Element.EL_BTN_PLAY.value:
           pr.gui_button(control_btn_bounds, ">")
 
@@ -226,6 +230,9 @@ def render_ui(media_player: MediaPlayer) -> None:
 
         case Element.EL_BTN_NEXT.value:
           pr.gui_button(control_btn_bounds, ">>")
+
+        case Element.EL_VOLUME_SLIDER.value:
+          pr.gui_slider(volume_bar_bounds, "VOL ", "", curr_vol_level, 0,10)  
 
         case Element.EL_DROP_FILES.value:
           pr.gui_scroll_panel(drop_files_bounds, b"Files", drop_files_bounds, panelScroll, panelView)
