@@ -3,8 +3,6 @@ import raylib as rl
 from enum   import Enum
 from typing import Dict, List
 
-#import pdb
-
 BGCOLOR = pr.Color(0, 34, 43, 255)
 MAX_FILEPATH_RECORDED = 256
 MAX_FILEPATH_SIZE = 512
@@ -167,19 +165,19 @@ def update_state(media_player: MediaPlayer, event: Event) -> bool:
   next_state = transition_table[current_state].get(event, State.INVALID)
 
   if next_state is State.INVALID:
-    print(f"Invalid transition: {event.name} from {current_state.name}");
+    print(f"Invalid transition: {event.name} from {current_state.name}")
     return False
     
   media_player.current_state = next_state
-  print(f"{current_state.name} -> {next_state.name}");
+  print(f"{current_state.name} -> {next_state.name}")
   return True
 
 def init_raylib():
   screen_w = 800
   screen_h = 600
   pr.set_config_flags(pr.FLAG_WINDOW_RESIZABLE)
-  pr.init_window(screen_w, screen_h, "Media Player")
-  pr.set_target_fps(30);
+  pr.init_window(screen_w, screen_h, b"Media Player")
+  pr.set_target_fps(30)
   rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
 def return_layout(media_player: MediaPlayer) -> List[List[int]]:  
@@ -192,22 +190,22 @@ def return_layout(media_player: MediaPlayer) -> List[List[int]]:
       return _map_default
   
 def render_ui(media_player: MediaPlayer) -> None:
-  layout  = return_layout(media_player);
+  layout  = return_layout(media_player)
 
-  width = pr.get_screen_width();
-  height = pr.get_screen_height();
-  cell_width = width / GRID_COLS;
-  cell_height = height / GRID_ROWS;
+  width = pr.get_screen_width()
+  height = pr.get_screen_height()
+  cell_width = width / GRID_COLS
+  cell_height = height / GRID_ROWS
 
   for row, row_data in enumerate(layout):
     for col, element in enumerate(row_data):
-      cell_x = col * cell_width;
-      cell_y = row * cell_height;
+      cell_x = col * cell_width
+      cell_y = row * cell_height
 
       drop_files_bounds   = pr.Rectangle(cell_x, cell_y, cell_width * 12, cell_height * 11)
       control_btn_bounds  = pr.Rectangle(cell_x, cell_y, cell_width, cell_height)
       progress_bar_bounds = pr.Rectangle(cell_x, cell_y, cell_width * 8, cell_height / 2)
-      volume_bar_bounds   = pr.Rectangle(cell_x, cell_y + (cell_height / 2), cell_width * (7), cell_height / 2)
+      volume_bar_bounds   = pr.Rectangle(cell_x, cell_y + (cell_height / 2), cell_width * 7, cell_height / 2)
 
 
       match element: 
@@ -239,25 +237,25 @@ def render_ui(media_player: MediaPlayer) -> None:
           render_el_drop_files(drop_files_bounds, media_player, panelScroll, panelView, cell_width, cell_height)
 
 def render_el_progress_bar(progress_bar_bounds,curr_pos):
-  pr.gui_progress_bar(progress_bar_bounds,"","",curr_pos,0,10)
+  pr.gui_progress_bar(progress_bar_bounds,b"",b"",curr_pos,0,10)
 
-def render_el_btn_prev(control_btn_bounds):
-  pr.gui_button(control_btn_bounds, "<<")
+def render_el_btn_prev(control_btn_bounds: pr.Rectangle):
+  pr.gui_button(control_btn_bounds, b"<<")
 
-def render_el_btn_play(control_btn_bounds):
-  pr.gui_button(control_btn_bounds, ">")
+def render_el_btn_play(control_btn_bounds: pr.Rectangle):
+  pr.gui_button(control_btn_bounds, b">")
 
-def render_el_btn_pause(control_btn_bounds):
-  pr.gui_button(control_btn_bounds, "||")
+def render_el_btn_pause(control_btn_bounds: pr.Rectangle):
+  pr.gui_button(control_btn_bounds, b"||")
 
-def render_el_btn_stop(control_btn_bounds):
-  pr.gui_button(control_btn_bounds, "[]")
+def render_el_btn_stop(control_btn_bounds: pr.Rectangle):
+  pr.gui_button(control_btn_bounds, b"[]")
 
-def render_el_btn_next(control_btn_bounds):
-  pr.gui_button(control_btn_bounds, ">>")
+def render_el_btn_next(control_btn_bounds: pr.Rectangle):
+  pr.gui_button(control_btn_bounds, b">>")
 
-def render_el_volume_slider(volume_bar_bounds,curr_vol_level):
-  pr.gui_slider(volume_bar_bounds, "VOL ", "", curr_vol_level, 0,10)  
+def render_el_volume_slider(volume_bar_bounds: pr.Rectangle,curr_vol_level: int):
+  pr.gui_slider(volume_bar_bounds, b"VOL ", b"", curr_vol_level, 0,10)
 
 def render_el_drop_files(drop_files_bounds, media_player, panelScroll, panelView,cell_width,cell_height):
   pr.gui_scroll_panel(drop_files_bounds, b"Files", drop_files_bounds, panelScroll, panelView)
@@ -287,5 +285,4 @@ def draw_file_list(data, bounds, cell_width, cell_height):
  
       color = pr.YELLOW if i == data.currentTrackIndex else pr.WHITE
       pr.draw_text(file_name, x, y, int(cell_height/1.5), color)
-         
 

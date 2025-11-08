@@ -3,7 +3,7 @@ from utils import *
 def main():
   init_raylib()
 
-  media_player: MediaPlayer = MediaPlayer(initial_state=State.WAITING);
+  media_player: MediaPlayer = MediaPlayer(initial_state=State.WAITING)
 
   while not pr.window_should_close():
     if pr.is_file_dropped():
