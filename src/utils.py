@@ -213,33 +213,57 @@ def render_ui(media_player: MediaPlayer) -> None:
       match element: 
         case Element.EL_BLANK.value: 
           pass
+
         case Element.EL_PROGRESS_BAR.value: 
-          pr.gui_progress_bar(progress_bar_bounds,"","",curr_pos,0,10)
+          render_el_progress_bar(progress_bar_bounds,curr_pos)
 
         case Element.EL_BTN_PREV.value:
-          pr.gui_button(control_btn_bounds, "<<")
+          render_el_btn_prev(control_btn_bounds)
 
         case Element.EL_BTN_PLAY.value:
-          pr.gui_button(control_btn_bounds, ">")
+          render_el_btn_play(control_btn_bounds)
 
         case Element.EL_BTN_PAUSE.value:
-          pr.gui_button(control_btn_bounds, "||")
+         render_el_btn_pause(control_btn_bounds)
 
         case Element.EL_BTN_STOP.value:
-          pr.gui_button(control_btn_bounds, "[]")
+          render_el_btn_stop(control_btn_bounds)
 
         case Element.EL_BTN_NEXT.value:
-          pr.gui_button(control_btn_bounds, ">>")
+          render_el_btn_next(control_btn_bounds)
 
         case Element.EL_VOLUME_SLIDER.value:
-          pr.gui_slider(volume_bar_bounds, "VOL ", "", curr_vol_level, 0,10)  
+          render_el_volume_slider(volume_bar_bounds,curr_vol_level)
 
         case Element.EL_DROP_FILES.value:
-          pr.gui_scroll_panel(drop_files_bounds, b"Files", drop_files_bounds, panelScroll, panelView)
-          pr.begin_scissor_mode(int(panelView.x), int(panelView.y), int(panelView.width), int(panelView.height))
-          data = media_player
-          draw_file_list(data, drop_files_bounds, cell_width, cell_height)
-          pr.end_scissor_mode()
+          render_el_drop_files(drop_files_bounds, media_player, panelScroll, panelView, cell_width, cell_height)
+
+def render_el_progress_bar(progress_bar_bounds,curr_pos):
+  pr.gui_progress_bar(progress_bar_bounds,"","",curr_pos,0,10)
+
+def render_el_btn_prev(control_btn_bounds):
+  pr.gui_button(control_btn_bounds, "<<")
+
+def render_el_btn_play(control_btn_bounds):
+  pr.gui_button(control_btn_bounds, ">")
+
+def render_el_btn_pause(control_btn_bounds):
+  pr.gui_button(control_btn_bounds, "||")
+
+def render_el_btn_stop(control_btn_bounds):
+  pr.gui_button(control_btn_bounds, "[]")
+
+def render_el_btn_next(control_btn_bounds):
+  pr.gui_button(control_btn_bounds, ">>")
+
+def render_el_volume_slider(volume_bar_bounds,curr_vol_level):
+  pr.gui_slider(volume_bar_bounds, "VOL ", "", curr_vol_level, 0,10)  
+
+def render_el_drop_files(drop_files_bounds, media_player, panelScroll, panelView,cell_width,cell_height):
+  pr.gui_scroll_panel(drop_files_bounds, b"Files", drop_files_bounds, panelScroll, panelView)
+  pr.begin_scissor_mode(int(panelView.x), int(panelView.y), int(panelView.width), int(panelView.height))
+  draw_file_list(media_player, drop_files_bounds, cell_width, cell_height)
+  pr.end_scissor_mode()
 
 
 def draw_file_list(data, bounds, cell_width, cell_height):
