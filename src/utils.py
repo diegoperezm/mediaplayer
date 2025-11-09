@@ -72,16 +72,16 @@ _map_default: List[List[int]] = [
 
 _map_state_waiting: List[List[int]] = [
     [Element.EL_DROP_FILES.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [
         Element.EL_BTN_PREV.value,
         Element.EL_BTN_PLAY.value,
@@ -100,16 +100,16 @@ _map_state_waiting: List[List[int]] = [
 
 _map_state_play: List[List[int]] = [
     [Element.EL_DROP_FILES.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [Element.EL_BLANK.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [
         Element.EL_BTN_PREV.value,
         Element.EL_BTN_PAUSE.value,  # <- Different from waiting
@@ -195,7 +195,7 @@ def init_raylib() -> None:
     screen_h = 600
     pr.set_config_flags(pr.FLAG_WINDOW_RESIZABLE)
     pr.init_window(screen_w, screen_h, b"Media Player")
-    pr.set_target_fps(1)
+    pr.set_target_fps(30)
     pr.init_audio_device()
     rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
@@ -258,7 +258,9 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
                     render_el_btn_prev(control_btn_bounds)
 
                 case Element.EL_BTN_PLAY.value:
-                    render_el_btn_play(control_btn_bounds)
+                    clicked: bool = render_el_btn_play(control_btn_bounds)
+                    if clicked: 
+                        update_state(media_player, Event.play) 
 
                 case Element.EL_BTN_PAUSE.value:
                     render_el_btn_pause(control_btn_bounds)
@@ -293,11 +295,11 @@ def render_el_progress_bar(
     )
 
 
-def render_el_btn_prev(control_btn_bounds: pr.Rectangle) -> int:
+def render_el_btn_prev(control_btn_bounds: pr.Rectangle) -> bool:
     return pr.gui_button(control_btn_bounds, b"<<")
 
 
-def render_el_btn_play(control_btn_bounds: pr.Rectangle) -> int:
+def render_el_btn_play(control_btn_bounds: pr.Rectangle ) -> int:
     return pr.gui_button(control_btn_bounds, b">")
 
 
@@ -378,9 +380,7 @@ def draw_file_list(
         pr.draw_text(file_name, x, y, int(cell_height / 1.5), color)
 
 
-def load_and_play_track(
-    data: MediaData, media_player: MediaPlayer, index: int
-) -> None:
+def load_and_play_track( data: MediaData,  index: int) -> None:
     if data.music is not None:
         pr.stop_music_stream(data.music)
         pr.unload_music_stream(data.music)
