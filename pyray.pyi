@@ -401,15 +401,6 @@ COLORPICKER: int
 SCROLLBAR: int
 STATUSBAR: int
 
-# --- Constants (control states & enums) ---
-STATE_NORMAL: int
-STATE_FOCUSED: int
-STATE_PRESSED: int
-STATE_DISABLED: int
-
-TEXT_ALIGN_LEFT: int
-TEXT_ALIGN_CENTER: int
-TEXT_ALIGN_RIGHT: int
 
 
 ffi: Any  # cffi FFI instance used internally

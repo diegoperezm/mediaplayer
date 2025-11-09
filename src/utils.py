@@ -1,7 +1,7 @@
 import pyray  as pr
 import raylib as rl
-from enum   import Enum
-from dataclasses import dataclass
+from enum import Enum
+from dataclasses import dataclass,field
 from typing import Dict, List, Optional
 
 BGCOLOR = pr.Color(0, 34, 43, 255)
@@ -16,12 +16,6 @@ GRID_COLS = 12
 GRID_ROWS = 12
 SIZE_ROWS = 12
 SIZE_COLS = 12
-
-@dataclass
-class MediaData:
-    music: Optional[pr.Music] = None
-    current_index: int = -1
-    is_playing: bool = False
 
 class State(Enum):
   WAITING = "WAITING"
@@ -40,15 +34,30 @@ class Event(Enum):
   next  = "evt_next"
 
 class Element(Enum):
-    EL_BLANK = 0
-    EL_DROP_FILES = 1
-    EL_BTN_PREV = 2
-    EL_BTN_PLAY = 3
-    EL_BTN_PAUSE = 4
-    EL_BTN_STOP = 5
-    EL_BTN_NEXT = 6
-    EL_PROGRESS_BAR = 7
-    EL_VOLUME_SLIDER = 8
+    EL_BLANK = 0 
+    EL_DROP_FILES = 1 
+    EL_BTN_PREV = 2 
+    EL_BTN_PLAY = 3 
+    EL_BTN_PAUSE = 4 
+    EL_BTN_STOP = 5 
+    EL_BTN_NEXT = 6 
+    EL_PROGRESS_BAR = 7 
+    EL_VOLUME_SLIDER = 8 
+
+@dataclass
+class MediaData:
+    file_paths: list = field(default_factory=list)
+    file_path_counter: int = 0          
+    music: Optional[pr.Music] = None
+    current_track_index: int = -1
+    is_playing: bool = False
+    current_time: float = 0.0
+    total_time: float = 0.0
+    volume: float = 1.0
+
+@dataclass
+class MediaPlayer:
+    current_state: State = State.WAITING
 
 _map_default: List[List[int]] = [[0] * SIZE_COLS for _ in range(SIZE_ROWS)]
 
@@ -137,35 +146,6 @@ transition_table: Dict[State, Dict[Event, State]] = {
     },
 }
 
-class MediaPlayer:
-    def __init__(self, initial_state: State = State.WAITING) -> None:
-        self.currentState = initial_state
-
-        self.filePaths: list[str] = []         
-        self.filePathCounter: int = 0          
-        self.currentTrackIndex: int = 0        
-
-        self.isPlaying: bool = False
-        self.currentTime: float = 0.0
-        self.totalTime: float = 0.0
-        self.volume: float = 1.0
-
-        self.music = None  # rl.Music object or None
-
-    def add_file(self, path: str) -> None:
-        self.filePaths.append(path)
-        self.filePathCounter = len(self.filePaths)
-
-    def next_track(self) -> None:
-        if self.filePaths:
-            self.currentTrackIndex = (self.currentTrackIndex + 1) % len(self.filePaths)
-
-    def prev_track(self) -> None:
-        if self.filePaths:
-            self.currentTrackIndex = (self.currentTrackIndex - 1) % len(self.filePaths)
-
-
-
 # not sure -> bool
 def update_state(media_player: MediaPlayer, event: Event) -> bool:
   current_state = media_player.current_state
@@ -179,17 +159,18 @@ def update_state(media_player: MediaPlayer, event: Event) -> bool:
   print(f"{current_state.name} -> {next_state.name}")
   return True
 
-def init_raylib():
+def init_raylib() -> None :
   screen_w = 800
   screen_h = 600
   pr.set_config_flags(pr.FLAG_WINDOW_RESIZABLE)
   pr.init_window(screen_w, screen_h, b"Media Player")
-  pr.set_target_fps(30)
+  pr.set_target_fps(1)
   pr.init_audio_device()
   rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
 def return_layout(media_player: MediaPlayer) -> List[List[int]]:  
-  match media_player.currentState: 
+  print(f"{media_player.current_state}\n")
+  match media_player.current_state: 
     case State.PLAY:
       return _map_state_play
     case State.WAITING | State.PAUSE | State.STOP | State.PREV | State.NEXT:
@@ -197,7 +178,7 @@ def return_layout(media_player: MediaPlayer) -> List[List[int]]:
     case _:
       return _map_default
   
-def render_ui(media_player: MediaPlayer) -> None:
+def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
   layout  = return_layout(media_player)
 
   width = pr.get_screen_width()
@@ -242,39 +223,40 @@ def render_ui(media_player: MediaPlayer) -> None:
           render_el_volume_slider(volume_bar_bounds,curr_vol_level)
 
         case Element.EL_DROP_FILES.value:
-          render_el_drop_files(drop_files_bounds, media_player, panelScroll, panelView, cell_width, cell_height)
+          render_el_drop_files(drop_files_bounds, data, panelScroll, panelView, cell_width, cell_height)
 
-def render_el_progress_bar(progress_bar_bounds,curr_pos):
+def render_el_progress_bar(progress_bar_bounds: pr.Rectangle, curr_pos: int) -> None:
   pr.gui_progress_bar(progress_bar_bounds,b"",b"",curr_pos,0,10)
 
-def render_el_btn_prev(control_btn_bounds: pr.Rectangle):
+def render_el_btn_prev(control_btn_bounds: pr.Rectangle) -> None:
   pr.gui_button(control_btn_bounds, b"<<")
 
-def render_el_btn_play(control_btn_bounds: pr.Rectangle):
+def render_el_btn_play(control_btn_bounds: pr.Rectangle) -> None:
   pr.gui_button(control_btn_bounds, b">")
 
-def render_el_btn_pause(control_btn_bounds: pr.Rectangle):
+def render_el_btn_pause(control_btn_bounds: pr.Rectangle) -> None:
   pr.gui_button(control_btn_bounds, b"||")
 
-def render_el_btn_stop(control_btn_bounds: pr.Rectangle):
+def render_el_btn_stop(control_btn_bounds: pr.Rectangle) -> None:
   pr.gui_button(control_btn_bounds, b"[]")
 
-def render_el_btn_next(control_btn_bounds: pr.Rectangle):
+def render_el_btn_next(control_btn_bounds: pr.Rectangle) -> None:
   pr.gui_button(control_btn_bounds, b">>")
 
-def render_el_volume_slider(volume_bar_bounds: pr.Rectangle,curr_vol_level: int):
+def render_el_volume_slider(volume_bar_bounds: pr.Rectangle,curr_vol_level: int) -> None:
   pr.gui_slider(volume_bar_bounds, b"VOL ", b"", curr_vol_level, 0,10)
 
-def render_el_drop_files(drop_files_bounds, media_player, panelScroll, panelView,cell_width,cell_height):
+def render_el_drop_files(drop_files_bounds: pr.Rectangle, data: MediaData, panelScroll: pr.Vector2, panelView: pr.Rectangle, cell_width: float, cell_height: float) -> None:
   pr.gui_scroll_panel(drop_files_bounds, b"Files", drop_files_bounds, panelScroll, panelView)
   pr.begin_scissor_mode(int(panelView.x), int(panelView.y), int(panelView.width), int(panelView.height))
-  draw_file_list(media_player, drop_files_bounds, cell_width, cell_height)
+  draw_file_list(data, drop_files_bounds, cell_width, cell_height)
   pr.end_scissor_mode()
 
 
-def draw_file_list(data, bounds, cell_width, cell_height):
-  for i in range(data.filePathCounter):
-      path = data.filePaths[i]
+def draw_file_list(data: MediaData, bounds: pr.Rectangle, cell_width: float, cell_height: float) -> None:
+  for i in range(data.file_path_counter):
+      path = data.file_paths[i]
+
       if isinstance(path, str):
           path_bytes = path.encode('utf-8')
       else:
@@ -291,7 +273,7 @@ def draw_file_list(data, bounds, cell_width, cell_height):
         int(cell_height),
         pr.fade(pr.YELLOW, 0.0))
  
-      color = pr.YELLOW if i == data.currentTrackIndex else pr.WHITE
+      color = pr.YELLOW if i == data.current_track_index else pr.WHITE
       pr.draw_text(file_name, x, y, int(cell_height/1.5), color)
 
 def load_and_play_track(data: MediaData, media_player: MediaPlayer, index: int) -> None:
@@ -300,15 +282,15 @@ def load_and_play_track(data: MediaData, media_player: MediaPlayer, index: int) 
         pr.unload_music_stream(data.music)
         data.music = None
         data.is_playing = False
-    if index < 0 or media_player.filePaths is None or index >= len(media_player.filePaths):
+    if index < 0 or data.file_paths is None or index >= len(data.file_paths):
         return
-    path = media_player.filePaths[index]
+    path = data.file_paths[index]
     data.music = pr.load_music_stream(path.encode('utf-8'))
     if data.music is None:
         print(f"Failed to load: {path}")
         return
     pr.play_music_stream(data.music)
-    data.current_index = index
+    data.current_track_index = index
     data.is_playing = True
     print(f"Playing: {path}")
 
@@ -319,7 +301,7 @@ def update_music_stream_if_needed(data: MediaData) -> None:
         if not pr.is_music_stream_playing(data.music):
             # Music finished
             data.is_playing = False
-
+"""
 def handle_button_play(media_player, data: MediaData):
     if gui.gui_button(data.control_btn_bounds, b">"):
         if data.file_path_counter == 0:
@@ -342,3 +324,14 @@ def handle_button_play(media_player, data: MediaData):
             load_and_play_track(data, next_index)
 
         update_state(media_player, event_play)
+
+   def next_track(self) -> None:
+        if self.filePaths:
+            self.currentTrackIndex = (self.currentTrackIndex + 1) % len(self.filePaths)
+
+    def prev_track(self) -> None:
+        if self.filePaths:
+            self.currentTrackIndex = (self.currentTrackIndex - 1) % len(self.filePaths)
+"""
+
+

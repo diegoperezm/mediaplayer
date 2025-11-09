@@ -1,0 +1,42 @@
+[tool.ruff]
+# Reemplaza a flake8, isort, pyflakes, etc.
+line-length = 70
+target-version = "py311"
+fix = true
+show-fixes = true
+
+lint.ignore = [
+  "E501",  # long lines (handled by formatter)
+  "E203",  # whitespace before ':'
+]
+
+# Donde buscar el código
+src = ["src", "tests"]
+
+[tool.ruff.format]
+# Ruff también puede formatear (como black)
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.mypy]
+# Configuración de análisis de tipos
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+strict_optional = true
+
+# Carpetas donde buscar
+mypy_path = ["src"]
+
+# Para ignorar librerías sin tipado
+ignore_missing_imports = true
+
+[tool.bandit]
+# Configuración básica de seguridad
+skips = ["B101"]  # Ejemplo: ignora "assert used"
+targets = ["src"]
+
