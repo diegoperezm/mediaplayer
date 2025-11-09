@@ -5,6 +5,7 @@ from utils import (
     init_raylib,
     pr,
     render_ui,
+    update_music_stream_if_needed,
 )
 
 
@@ -24,6 +25,7 @@ def main() -> None:
                 data.file_path_counter += 1
             pr.unload_dropped_files(dropped_files)
 
+        update_music_stream_if_needed(data)
         pr.begin_drawing()
         pr.clear_background(pr.WHITE)
         render_ui(media_player, data)

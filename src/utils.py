@@ -255,21 +255,30 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
                     )
 
                 case Element.EL_BTN_PREV.value:
-                    render_el_btn_prev(control_btn_bounds)
+                    clicked: bool = render_el_btn_prev(control_btn_bounds)
+                    if clicked: 
+                        update_state(media_player, Event.prev) 
 
                 case Element.EL_BTN_PLAY.value:
                     clicked: bool = render_el_btn_play(control_btn_bounds)
                     if clicked: 
+                        load_and_play_track(data)
                         update_state(media_player, Event.play) 
 
                 case Element.EL_BTN_PAUSE.value:
-                    render_el_btn_pause(control_btn_bounds)
+                    clicked: bool =  render_el_btn_pause(control_btn_bounds)
+                    if clicked: 
+                        update_state(media_player, Event.pause) 
 
                 case Element.EL_BTN_STOP.value:
-                    render_el_btn_stop(control_btn_bounds)
+                    clicked: bool = render_el_btn_stop(control_btn_bounds)
+                    if clicked: 
+                        update_state(media_player, Event.stop) 
 
                 case Element.EL_BTN_NEXT.value:
-                    render_el_btn_next(control_btn_bounds)
+                    clicked: bool =  render_el_btn_next(control_btn_bounds)
+                    if clicked: 
+                        update_state(media_player, Event.next) 
 
                 case Element.EL_VOLUME_SLIDER.value:
                     render_el_volume_slider(
@@ -380,25 +389,24 @@ def draw_file_list(
         pr.draw_text(file_name, x, y, int(cell_height / 1.5), color)
 
 
-def load_and_play_track( data: MediaData,  index: int) -> None:
-    if data.music is not None:
-        pr.stop_music_stream(data.music)
-        pr.unload_music_stream(data.music)
-        data.music = None
-        data.is_playing = False
-    if (
-        index < 0
-        or data.file_paths is None
-        or index >= len(data.file_paths)
-    ):
-        return
-    path = data.file_paths[index]
+def load_and_play_track(data: MediaData) -> None:
+#    if data.music is not None:
+#        pr.stop_music_stream(data.music)
+#        pr.unload_music_stream(data.music)
+#        data.music = None
+#        data.is_playing = False
+#    if (
+#        index < 0
+#        or data.file_paths is None
+#        or index >= len(data.file_paths)
+#    ):
+#        return
+    path = data.file_paths[data.current_track_index]
     data.music = pr.load_music_stream(path.encode("utf-8"))
     if data.music is None:
         print(f"Failed to load: {path}")
         return
     pr.play_music_stream(data.music)
-    data.current_track_index = index
     data.is_playing = True
     print(f"Playing: {path}")
 
