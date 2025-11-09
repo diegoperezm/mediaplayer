@@ -169,7 +169,6 @@ def init_raylib() -> None :
   rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
 def return_layout(media_player: MediaPlayer) -> List[List[int]]:  
-  print(f"{media_player.current_state}\n")
   match media_player.current_state: 
     case State.PLAY:
       return _map_state_play
