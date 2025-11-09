@@ -2,7 +2,6 @@ from utils import *
 
 def main():
   init_raylib()
-
   media_player: MediaPlayer = MediaPlayer(initial_state=State.WAITING)
 
   while not pr.window_should_close():
@@ -19,6 +18,7 @@ def main():
     render_ui(media_player)
     pr.end_drawing()
 
+  pr.close_audio_device()
   pr.close_window()
 
 if __name__ == "__main__":

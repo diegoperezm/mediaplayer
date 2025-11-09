@@ -1,7 +1,8 @@
 import pyray  as pr
 import raylib as rl
 from enum   import Enum
-from typing import Dict, List
+from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 BGCOLOR = pr.Color(0, 34, 43, 255)
 MAX_FILEPATH_RECORDED = 256
@@ -15,6 +16,12 @@ GRID_COLS = 12
 GRID_ROWS = 12
 SIZE_ROWS = 12
 SIZE_COLS = 12
+
+@dataclass
+class MediaData:
+    music: Optional[pr.Music] = None
+    current_index: int = -1
+    is_playing: bool = False
 
 class State(Enum):
   WAITING = "WAITING"
@@ -178,6 +185,7 @@ def init_raylib():
   pr.set_config_flags(pr.FLAG_WINDOW_RESIZABLE)
   pr.init_window(screen_w, screen_h, b"Media Player")
   pr.set_target_fps(30)
+  pr.init_audio_device()
   rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
 def return_layout(media_player: MediaPlayer) -> List[List[int]]:  
@@ -286,3 +294,51 @@ def draw_file_list(data, bounds, cell_width, cell_height):
       color = pr.YELLOW if i == data.currentTrackIndex else pr.WHITE
       pr.draw_text(file_name, x, y, int(cell_height/1.5), color)
 
+def load_and_play_track(data: MediaData, media_player: MediaPlayer, index: int) -> None:
+    if data.music is not None:
+        pr.stop_music_stream(data.music)
+        pr.unload_music_stream(data.music)
+        data.music = None
+        data.is_playing = False
+    if index < 0 or media_player.filePaths is None or index >= len(media_player.filePaths):
+        return
+    path = media_player.filePaths[index]
+    data.music = pr.load_music_stream(path.encode('utf-8'))
+    if data.music is None:
+        print(f"Failed to load: {path}")
+        return
+    pr.play_music_stream(data.music)
+    data.current_index = index
+    data.is_playing = True
+    print(f"Playing: {path}")
+
+def update_music_stream_if_needed(data: MediaData) -> None:
+    if data.music is not None and data.is_playing:
+        pr.update_music_stream(data.music)
+        # If you want to detect end-of-stream you can use IsMusicStreamPlaying or other logic
+        if not pr.is_music_stream_playing(data.music):
+            # Music finished
+            data.is_playing = False
+
+def handle_button_play(media_player, data: MediaData):
+    if gui.gui_button(data.control_btn_bounds, b">"):
+        if data.file_path_counter == 0:
+            return  # nothing to play
+
+        # If there is already a music stream loaded
+        if data.music is not None:
+            # If currently paused / not playing, resume; else do nothing or restart
+            if not pr.is_music_stream_playing(data.music):
+                pr.play_music_stream(data.music)     # resume / start
+                data.is_playing = True
+                print("Resuming playback")
+            else:
+                # already playing — optionally restart or ignore
+                print("Already playing")
+        else:
+            # No music loaded: load and play the first (or current) track
+            # pick a sensible index: either 0 or data.current_index + 1 logic
+            next_index = 0 if data.current_index < 0 else data.current_index
+            load_and_play_track(data, next_index)
+
+        update_state(media_player, event_play)
