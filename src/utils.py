@@ -195,6 +195,11 @@ def update_state(
         case State.PLAY:
             load_track(data)
             play_track(data)
+
+        case State.PAUSE:
+            if data.is_playing:
+                pr.pause_music_stream(data.music)
+
         case State.PREV:
             if data.file_path_counter > 0:
                 data.current_track_index = (
@@ -202,9 +207,16 @@ def update_state(
                     - 1
                     + data.file_path_counter
                 ) % data.file_path_counter
-            load_track(data)
-            play_track(data)
- 
+            update_state(media_player, Event.play, data)
+
+        case State.NEXT:
+            if data.file_path_counter > 0:
+                data.current_track_index = (
+                    data.current_track_index
+                    + 1 % data.file_path_counter
+                )
+            update_state(media_player, Event.play, data)
+
     return True
 
 
@@ -419,7 +431,6 @@ def add_file_to_playlist(data: MediaData) -> None:
         pr.unload_dropped_files(dropped_files)
 
 
-
 def load_track(data: MediaData) -> None:
     path = data.file_paths[data.current_track_index]
     data.music = pr.load_music_stream(path.encode("utf-8"))
@@ -427,13 +438,12 @@ def load_track(data: MediaData) -> None:
         print(f"Failed to load: {path}")
         return
 
+
 def play_track(data: MediaData) -> None:
     path = data.file_paths[data.current_track_index]
     pr.play_music_stream(data.music)
     data.is_playing = True
     print(f"Playing: {path}")
-
-
 
 
 def update_music_stream_if_needed(data: MediaData) -> None:
