@@ -2,10 +2,12 @@ from utils import (
     MediaData,
     MediaPlayer,
     State,
+    add_file_to_playlist,
     init_raylib,
     pr,
     render_ui,
     update_music_stream_if_needed,
+    update_state,
 )
 
 
@@ -16,14 +18,7 @@ def main() -> None:
 
     while not pr.window_should_close():
         if pr.is_file_dropped():
-            dropped_files = pr.load_dropped_files()
-            for i in range(dropped_files.count):
-                path = pr.ffi.string(dropped_files.paths[i]).decode(
-                    "utf-8"
-                )
-                data.file_paths.append(path)
-                data.file_path_counter += 1
-            pr.unload_dropped_files(dropped_files)
+            add_file_to_playlist(data)
 
         update_music_stream_if_needed(data)
         pr.begin_drawing()

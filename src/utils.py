@@ -8,8 +8,9 @@ import raylib as rl
 BGCOLOR = pr.Color(0, 34, 43, 255)
 MAX_FILEPATH_RECORDED = 256
 MAX_FILEPATH_SIZE = 512
-panelScroll = pr.Vector2(0, 0)
-panelView = pr.Rectangle(0, 0, 0, 0)
+
+panel_scroll = pr.Vector2(0, 0)
+panel_view = pr.Rectangle(0, 0, 0, 0)
 curr_pos = pr.ffi.new("float *", 1.0)
 curr_vol_level = pr.ffi.new("float *", 1.0)
 
@@ -173,7 +174,9 @@ transition_table: Dict[State, Dict[Event, State]] = {
 
 
 # not sure -> bool
-def update_state(media_player: MediaPlayer, event: Event) -> bool:
+def update_state(
+    media_player: MediaPlayer, event: Event, data: MediaData
+) -> bool:
     current_state = media_player.current_state
     next_state = transition_table[current_state].get(
         event, State.INVALID
@@ -187,6 +190,21 @@ def update_state(media_player: MediaPlayer, event: Event) -> bool:
 
     media_player.current_state = next_state
     print(f"{current_state.name} -> {next_state.name}")
+
+    match next_state:
+        case State.PLAY:
+            load_track(data)
+            play_track(data)
+        case State.PREV:
+            if data.file_path_counter > 0:
+                data.current_track_index = (
+                    data.current_track_index
+                    - 1
+                    + data.file_path_counter
+                ) % data.file_path_counter
+            load_track(data)
+            play_track(data)
+ 
     return True
 
 
@@ -223,6 +241,7 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
     height = pr.get_screen_height()
     cell_width = width / GRID_COLS
     cell_height = height / GRID_ROWS
+    clicked: bool
 
     for row, row_data in enumerate(layout):
         for col, element in enumerate(row_data):
@@ -255,30 +274,29 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
                     )
 
                 case Element.EL_BTN_PREV.value:
-                    clicked: bool = render_el_btn_prev(control_btn_bounds)
-                    if clicked: 
-                        update_state(media_player, Event.prev) 
+                    clicked = render_el_btn_prev(control_btn_bounds)
+                    if clicked:
+                        update_state(media_player, Event.prev, data)
 
                 case Element.EL_BTN_PLAY.value:
-                    clicked: bool = render_el_btn_play(control_btn_bounds)
-                    if clicked: 
-                        load_and_play_track(data)
-                        update_state(media_player, Event.play) 
+                    clicked = render_el_btn_play(control_btn_bounds)
+                    if clicked:
+                        update_state(media_player, Event.play, data)
 
                 case Element.EL_BTN_PAUSE.value:
-                    clicked: bool =  render_el_btn_pause(control_btn_bounds)
-                    if clicked: 
-                        update_state(media_player, Event.pause) 
+                    clicked = render_el_btn_pause(control_btn_bounds)
+                    if clicked:
+                        update_state(media_player, Event.pause, data)
 
                 case Element.EL_BTN_STOP.value:
-                    clicked: bool = render_el_btn_stop(control_btn_bounds)
-                    if clicked: 
-                        update_state(media_player, Event.stop) 
+                    clicked = render_el_btn_stop(control_btn_bounds)
+                    if clicked:
+                        update_state(media_player, Event.stop, data)
 
                 case Element.EL_BTN_NEXT.value:
-                    clicked: bool =  render_el_btn_next(control_btn_bounds)
-                    if clicked: 
-                        update_state(media_player, Event.next) 
+                    clicked = render_el_btn_next(control_btn_bounds)
+                    if clicked:
+                        update_state(media_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
                     render_el_volume_slider(
@@ -289,8 +307,8 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
                     render_el_drop_files(
                         drop_files_bounds,
                         data,
-                        panelScroll,
-                        panelView,
+                        panel_scroll,
+                        panel_view,
                         cell_width,
                         cell_height,
                     )
@@ -308,19 +326,19 @@ def render_el_btn_prev(control_btn_bounds: pr.Rectangle) -> bool:
     return pr.gui_button(control_btn_bounds, b"<<")
 
 
-def render_el_btn_play(control_btn_bounds: pr.Rectangle ) -> int:
+def render_el_btn_play(control_btn_bounds: pr.Rectangle) -> bool:
     return pr.gui_button(control_btn_bounds, b">")
 
 
-def render_el_btn_pause(control_btn_bounds: pr.Rectangle) -> int:
+def render_el_btn_pause(control_btn_bounds: pr.Rectangle) -> bool:
     return pr.gui_button(control_btn_bounds, b"||")
 
 
-def render_el_btn_stop(control_btn_bounds: pr.Rectangle) -> int:
+def render_el_btn_stop(control_btn_bounds: pr.Rectangle) -> bool:
     return pr.gui_button(control_btn_bounds, b"[]")
 
 
-def render_el_btn_next(control_btn_bounds: pr.Rectangle) -> int:
+def render_el_btn_next(control_btn_bounds: pr.Rectangle) -> bool:
     return pr.gui_button(control_btn_bounds, b">>")
 
 
@@ -335,8 +353,8 @@ def render_el_volume_slider(
 def render_el_drop_files(
     drop_files_bounds: pr.Rectangle,
     data: MediaData,
-    panelScroll: pr.Vector2,
-    panelView: pr.Rectangle,
+    panel_scroll: pr.Vector2,
+    panel_view: pr.Rectangle,
     cell_width: float,
     cell_height: float,
 ) -> None:
@@ -344,14 +362,14 @@ def render_el_drop_files(
         drop_files_bounds,
         b"Files",
         drop_files_bounds,
-        panelScroll,
-        panelView,
+        panel_scroll,
+        panel_view,
     )
     pr.begin_scissor_mode(
-        int(panelView.x),
-        int(panelView.y),
-        int(panelView.width),
-        int(panelView.height),
+        int(panel_view.x),
+        int(panel_view.y),
+        int(panel_view.width),
+        int(panel_view.height),
     )
     draw_file_list(data, drop_files_bounds, cell_width, cell_height)
     pr.end_scissor_mode()
@@ -373,8 +391,8 @@ def draw_file_list(
 
         file_name = pr.get_file_name(path_bytes)
 
-        x = int((bounds.x + panelScroll.x) + (cell_width / 2.0))
-        y = int(bounds.y + panelScroll.y + cell_height * (i + 2))
+        x = int((bounds.x + panel_scroll.x) + (cell_width / 2.0))
+        y = int(bounds.y + panel_scroll.y + cell_height * (i + 2))
         pr.draw_rectangle(
             x,
             y,
@@ -389,66 +407,37 @@ def draw_file_list(
         pr.draw_text(file_name, x, y, int(cell_height / 1.5), color)
 
 
-def load_and_play_track(data: MediaData) -> None:
-#    if data.music is not None:
-#        pr.stop_music_stream(data.music)
-#        pr.unload_music_stream(data.music)
-#        data.music = None
-#        data.is_playing = False
-#    if (
-#        index < 0
-#        or data.file_paths is None
-#        or index >= len(data.file_paths)
-#    ):
-#        return
+def add_file_to_playlist(data: MediaData) -> None:
+    if pr.is_file_dropped():
+        dropped_files = pr.load_dropped_files()
+        for i in range(dropped_files.count):
+            path = pr.ffi.string(dropped_files.paths[i]).decode(
+                "utf-8"
+            )
+            data.file_paths.append(path)
+            data.file_path_counter += 1
+        pr.unload_dropped_files(dropped_files)
+
+
+
+def load_track(data: MediaData) -> None:
     path = data.file_paths[data.current_track_index]
     data.music = pr.load_music_stream(path.encode("utf-8"))
     if data.music is None:
         print(f"Failed to load: {path}")
         return
+
+def play_track(data: MediaData) -> None:
+    path = data.file_paths[data.current_track_index]
     pr.play_music_stream(data.music)
     data.is_playing = True
     print(f"Playing: {path}")
 
 
+
+
 def update_music_stream_if_needed(data: MediaData) -> None:
     if data.music is not None and data.is_playing:
         pr.update_music_stream(data.music)
-        # If you want to detect end-of-stream you can use IsMusicStreamPlaying or other logic
         if not pr.is_music_stream_playing(data.music):
-            # Music finished
             data.is_playing = False
-
-
-"""
-def handle_button_play(media_player, data: MediaData):
-    if gui.gui_button(data.control_btn_bounds, b">"):
-        if data.file_path_counter == 0:
-            return  # nothing to play
-
-        # If there is already a music stream loaded
-        if data.music is not None:
-            # If currently paused / not playing, resume; else do nothing or restart
-            if not pr.is_music_stream_playing(data.music):
-                pr.play_music_stream(data.music)     # resume / start
-                data.is_playing = True
-                print("Resuming playback")
-            else:
-                # already playing — optionally restart or ignore
-                print("Already playing")
-        else:
-            # No music loaded: load and play the first (or current) track
-            # pick a sensible index: either 0 or data.current_index + 1 logic
-            next_index = 0 if data.current_index < 0 else data.current_index
-            load_and_play_track(data, next_index)
-
-        update_state(media_player, event_play)
-
-   def next_track(self) -> None:
-        if self.filePaths:
-            self.currentTrackIndex = (self.currentTrackIndex + 1) % len(self.filePaths)
-
-    def prev_track(self) -> None:
-        if self.filePaths:
-            self.currentTrackIndex = (self.currentTrackIndex - 1) % len(self.filePaths)
-"""
