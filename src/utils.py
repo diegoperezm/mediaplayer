@@ -54,8 +54,9 @@ class MediaData:
     music: Optional[pr.Music] = None
     current_track_index: int = -1
     is_playing: bool = False
-   # current_track_pos = pr.ffi.new("float *", 0.0)
-    current_track_pos: any = field(default_factory=lambda: pr.ffi.new("float *", 0.0))
+    current_track_pos: any = field(
+        default_factory=lambda: pr.ffi.new("float *", 0.0)
+    )
     current_vol_level = pr.ffi.new("float *", 1.0)
     current_time: float = 0.0
     total_time: float = 0.0
@@ -338,7 +339,12 @@ def render_el_progress_bar(
     progress_bar_bounds: pr.Rectangle, data: MediaData
 ) -> float:
     return pr.gui_progress_bar(
-        progress_bar_bounds, b"", b"", data.current_track_pos, 0.0, data.total_time 
+        progress_bar_bounds,
+        b"",
+        b"",
+        data.current_track_pos,
+        0.0,
+        data.total_time,
     )
 
 
@@ -457,7 +463,9 @@ def play_track(data: MediaData) -> None:
 def update_music_stream_if_needed(data: MediaData) -> None:
     if data.music is not None and data.is_playing:
         pr.update_music_stream(data.music)
-        data.current_track_pos[0] = pr.get_music_time_played(data.music)
+        data.current_track_pos[0] = pr.get_music_time_played(
+            data.music
+        )
         data.total_time = pr.get_music_time_length(data.music)
         if not pr.is_music_stream_playing(data.music):
             data.is_playing = False
