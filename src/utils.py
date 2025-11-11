@@ -382,7 +382,7 @@ def render_el_drop_files(
     scroll = render_el_drop_files.scroll
     view = render_el_drop_files.view
 
-    content_h = (
+    content_height = (
         ((data.file_path_counter * cell_height) + (cell_height * 2.0))
         if (data.file_path_counter * cell_height)
         > drop_files_bounds.height
@@ -393,7 +393,7 @@ def render_el_drop_files(
         drop_files_bounds.x,
         drop_files_bounds.y,
         drop_files_bounds.width,
-        content_h,
+        content_height,
     )
 
     pr.gui_scroll_panel(
