@@ -11,9 +11,6 @@ MAX_FILEPATH_SIZE = 512
 
 panel_scroll = pr.Vector2(0, 0)
 panel_view = pr.Rectangle(0, 0, 0, 0)
-curr_pos = pr.ffi.new("float *", 1.0)
-curr_vol_level = pr.ffi.new("float *", 1.0)
-
 GRID_COLS = 12
 GRID_ROWS = 12
 SIZE_ROWS = 12
@@ -57,6 +54,8 @@ class MediaData:
     music: Optional[pr.Music] = None
     current_track_index: int = -1
     is_playing: bool = False
+    current_track_pos = pr.ffi.new("float *", 0.0)
+    current_vol_level = pr.ffi.new("float *", 1.0)
     current_time: float = 0.0
     total_time: float = 0.0
     volume: float = 1.0
@@ -192,16 +191,25 @@ def update_state(
     print(f"{current_state.name} -> {next_state.name}")
 
     match next_state:
+        case State.WAITING:
+            pass
         case State.PLAY:
-            load_track(data)
-            play_track(data)
-
+            # and pr.resume_music_stream??? PAUSE -> PLAY
+            if is_playlist_empty(data) is False:
+                print(f"state play: counter{data.file_path_counter}")
+                load_track(data)
+                play_track(data)
+            
         case State.PAUSE:
             if data.is_playing:
                 pr.pause_music_stream(data.music)
 
+        case State.STOP:
+            if data.is_playing:
+                pr.stop_music_stream(data.music)
+
         case State.PREV:
-            if data.file_path_counter > 0:
+            if is_playlist_empty(data) is False:
                 data.current_track_index = (
                     data.current_track_index
                     - 1
@@ -210,7 +218,7 @@ def update_state(
             update_state(media_player, Event.play, data)
 
         case State.NEXT:
-            if data.file_path_counter > 0:
+            if is_playlist_empty(data) is False:
                 data.current_track_index = (
                     data.current_track_index
                     + 1 % data.file_path_counter
@@ -220,13 +228,16 @@ def update_state(
     return True
 
 
+def is_playlist_empty(data: MediaData) -> bool:
+    return data.file_path_counter <= 0
+
+
 def init_raylib() -> None:
     screen_w = 800
     screen_h = 600
     pr.set_config_flags(pr.FLAG_WINDOW_RESIZABLE)
     pr.init_window(screen_w, screen_h, b"Media Player")
     pr.set_target_fps(30)
-    pr.init_audio_device()
     rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
 
@@ -281,9 +292,7 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
                     pass
 
                 case Element.EL_PROGRESS_BAR.value:
-                    render_el_progress_bar(
-                        progress_bar_bounds, curr_pos
-                    )
+                    render_el_progress_bar( progress_bar_bounds, data)
 
                 case Element.EL_BTN_PREV.value:
                     clicked = render_el_btn_prev(control_btn_bounds)
@@ -311,9 +320,7 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
                         update_state(media_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
-                    render_el_volume_slider(
-                        volume_bar_bounds, curr_vol_level
-                    )
+                    render_el_volume_slider( volume_bar_bounds, data)
 
                 case Element.EL_DROP_FILES.value:
                     render_el_drop_files(
@@ -327,10 +334,9 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
 
 
 def render_el_progress_bar(
-    progress_bar_bounds: pr.Rectangle, curr_pos: int
-) -> float:
+    progress_bar_bounds: pr.Rectangle, data: MediaData) -> float:
     return pr.gui_progress_bar(
-        progress_bar_bounds, b"", b"", curr_pos, 0, 10
+        progress_bar_bounds, b"", b"", data.current_track_pos, 0, 10
     )
 
 
@@ -355,10 +361,10 @@ def render_el_btn_next(control_btn_bounds: pr.Rectangle) -> bool:
 
 
 def render_el_volume_slider(
-    volume_bar_bounds: pr.Rectangle, curr_vol_level: int
-) -> float:
+    volume_bar_bounds: pr.Rectangle, data: MediaData) -> float:
+
     return pr.gui_slider(
-        volume_bar_bounds, b"VOL ", b"", curr_vol_level, 0, 10
+        volume_bar_bounds, b"VOL ", b"", data.current_vol_level, 0, 10
     )
 
 

@@ -13,6 +13,7 @@ from utils import (
 
 def main() -> None:
     init_raylib()
+    pr.init_audio_device()
     media_player: MediaPlayer = MediaPlayer(State.WAITING)
     data: MediaData = MediaData()
 
