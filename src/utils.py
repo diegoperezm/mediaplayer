@@ -57,7 +57,7 @@ class MediaData:
     current_track_pos: any = field(
         default_factory=lambda: pr.ffi.new("float *", 0.0)
     )
-    current_vol_level = pr.ffi.new("float *", 1.0)
+    current_vol_level = pr.ffi.new("float *", 0.3)
     current_time: float = 0.0
     total_time: float = 0.0
     volume: float = 1.0
@@ -372,7 +372,7 @@ def render_el_volume_slider(
     volume_bar_bounds: pr.Rectangle, data: MediaData
 ) -> float:
     return pr.gui_slider(
-        volume_bar_bounds, b"VOL ", b"", data.current_vol_level, 0, 10
+        volume_bar_bounds, b"VOL ", b"", data.current_vol_level, 0, 1
     )
 
 
@@ -461,6 +461,8 @@ def play_track(data: MediaData) -> None:
 
 
 def update_music_stream_if_needed(data: MediaData) -> None:
+    if data.music is not None:
+       pr.set_music_volume(data.music, data.current_vol_level[0])
     if data.music is not None and data.is_playing:
         pr.update_music_stream(data.music)
         data.current_track_pos[0] = pr.get_music_time_played(
@@ -469,3 +471,8 @@ def update_music_stream_if_needed(data: MediaData) -> None:
         data.total_time = pr.get_music_time_length(data.music)
         if not pr.is_music_stream_playing(data.music):
             data.is_playing = False
+
+
+
+
+
