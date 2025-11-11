@@ -1,4 +1,5 @@
 from utils import (
+    BGCOLOR,
     MediaData,
     MediaPlayer,
     State,
@@ -23,7 +24,7 @@ def main() -> None:
 
         update_music_stream_if_needed(data)
         pr.begin_drawing()
-        pr.clear_background(pr.WHITE)
+        pr.clear_background(BGCOLOR)
         render_ui(media_player, data)
         pr.end_drawing()
 
