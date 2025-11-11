@@ -5,16 +5,11 @@ from typing import Dict, List, Optional
 import pyray as pr
 import raylib as rl
 
-BGCOLOR = pr.Color(0, 34, 43, 255)
-MAX_FILEPATH_RECORDED = 256
-MAX_FILEPATH_SIZE = 512
-
-panel_scroll = pr.Vector2(0, 0)
-panel_view = pr.Rectangle(0, 0, 0, 0)
 GRID_COLS = 12
 GRID_ROWS = 12
 SIZE_ROWS = 12
 SIZE_COLS = 12
+BGCOLOR = pr.Color(0, 34, 43, 255)
 
 
 class State(Enum):
@@ -328,8 +323,6 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
                     render_el_drop_files(
                         drop_files_bounds,
                         data,
-                        panel_scroll,
-                        panel_view,
                         cell_width,
                         cell_height,
                     )
@@ -379,31 +372,51 @@ def render_el_volume_slider(
 def render_el_drop_files(
     drop_files_bounds: pr.Rectangle,
     data: MediaData,
-    panel_scroll: pr.Vector2,
-    panel_view: pr.Rectangle,
     cell_width: float,
     cell_height: float,
 ) -> None:
+    if not hasattr(render_el_drop_files, "scroll"):
+        render_el_drop_files.scroll = pr.Vector2(0, 0)
+        render_el_drop_files.view = pr.Rectangle(0, 0, 0, 0)
+
+    scroll = render_el_drop_files.scroll
+    view = render_el_drop_files.view
+
+    content_h = (
+        ((data.file_path_counter * cell_height) + (cell_height * 2.0))
+        if (data.file_path_counter * cell_height)
+        > drop_files_bounds.height
+        else drop_files_bounds.height
+    )
+
+    content = pr.Rectangle(
+        drop_files_bounds.x,
+        drop_files_bounds.y,
+        drop_files_bounds.width,
+        content_h,
+    )
+
     pr.gui_scroll_panel(
         drop_files_bounds,
         b"Files",
-        drop_files_bounds,
-        panel_scroll,
-        panel_view,
+        content,
+        scroll,
+        view,
     )
+
     pr.begin_scissor_mode(
-        int(panel_view.x),
-        int(panel_view.y),
-        int(panel_view.width),
-        int(panel_view.height),
+        int(view.x), int(view.y), int(view.width), int(view.height)
     )
-    draw_file_list(data, drop_files_bounds, cell_width, cell_height)
+    draw_file_list(
+        data, drop_files_bounds, scroll, cell_width, cell_height
+    )
     pr.end_scissor_mode()
 
 
 def draw_file_list(
     data: MediaData,
     bounds: pr.Rectangle,
+    scroll: pr.Vector2,
     cell_width: float,
     cell_height: float,
 ) -> None:
@@ -417,8 +430,8 @@ def draw_file_list(
 
         file_name = pr.get_file_name(path_bytes)
 
-        x = int((bounds.x + panel_scroll.x) + (cell_width / 2.0))
-        y = int(bounds.y + panel_scroll.y + cell_height * (i + 2))
+        x = int((bounds.x + scroll.x) + (cell_width / 2.0))
+        y = int(bounds.y + scroll.y + cell_height * (i + 2))
         pr.draw_rectangle(
             x,
             y,
@@ -462,7 +475,7 @@ def play_track(data: MediaData) -> None:
 
 def update_music_stream_if_needed(data: MediaData) -> None:
     if data.music is not None:
-       pr.set_music_volume(data.music, data.current_vol_level[0])
+        pr.set_music_volume(data.music, data.current_vol_level[0])
     if data.music is not None and data.is_playing:
         pr.update_music_stream(data.music)
         data.current_track_pos[0] = pr.get_music_time_played(
@@ -471,8 +484,3 @@ def update_music_stream_if_needed(data: MediaData) -> None:
         data.total_time = pr.get_music_time_length(data.music)
         if not pr.is_music_stream_playing(data.music):
             data.is_playing = False
-
-
-
-
-
