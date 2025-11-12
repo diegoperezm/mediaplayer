@@ -189,29 +189,36 @@ def update_state(
                 play_track(data)
 
         case State.PAUSE:
-            if data.music is not None and pr.is_music_stream_playing(data.music):
+            if data.music is not None and pr.is_music_stream_playing(
+                data.music
+            ):
                 pr.pause_music_stream(data.music)
 
         case State.STOP:
-            if data.music is not None and pr.is_music_stream_playing(data.music):
+            if data.music is not None and pr.is_music_stream_playing(
+                data.music
+            ):
                 pr.stop_music_stream(data.music)
 
         case State.PREV:
             if is_playlist_empty(data) is False:
-                data.current_track_index = (
-                    data.current_track_index
-                    - 1
-                    + data.file_path_counter
-                ) % data.file_path_counter
+                data.current_track_index = get_prev_track(data)
             update_state(media_player, Event.play, data)
 
         case State.NEXT:
             if is_playlist_empty(data) is False:
-                data.current_track_index = (
-                    data.current_track_index
-                    + 1 % data.file_path_counter
-                )
+                data.current_track_index = get_next_track(data)
             update_state(media_player, Event.play, data)
+
+
+def get_prev_track(data: PlayListData) -> int:
+    return (
+        data.current_track_index - 1 + data.file_path_counter
+    ) % data.file_path_counter
+
+
+def get_next_track(data: PlayListData) -> int:
+    return data.current_track_index + 1 % data.file_path_counter
 
 
 def is_playlist_empty(data: PlayListData) -> bool:
@@ -302,7 +309,9 @@ def render_ui(media_player: MediaPlayer, data: PlayListData) -> None:
                         update_state(media_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
-                    render_el_volume_slider(cell_x, cell_y, cell_width, cell_height, data)
+                    render_el_volume_slider(
+                        cell_x, cell_y, cell_width, cell_height, data
+                    )
 
                 case Element.EL_DROP_FILES.value:
                     render_el_drop_files(
@@ -423,7 +432,7 @@ def render_el_volume_slider(
     cell_y: float,
     cell_width: float,
     cell_height: float,
-    data: PlayListData
+    data: PlayListData,
 ) -> None:
     volume_bar_bounds = pr.Rectangle(
         cell_x,
