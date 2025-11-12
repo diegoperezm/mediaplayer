@@ -190,7 +190,6 @@ def update_state(
             pass
         case State.PLAY:
             if is_playlist_empty(data) is False:
-                print(f"state play: counter{data.file_path_counter}")
                 load_track(data)
                 play_track(data)
 
