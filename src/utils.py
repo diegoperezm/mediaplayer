@@ -231,7 +231,7 @@ def get_prev_track(data: PlayListData) -> int:
 
 
 def get_next_track(data: PlayListData) -> int:
-    return data.current_track_index + 1 % data.file_path_counter
+    return (data.current_track_index + 1) % data.file_path_counter
 
 
 def is_playlist_empty(data: PlayListData) -> bool:
