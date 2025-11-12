@@ -1,7 +1,7 @@
 from utils import (
     BGCOLOR,
-    MediaData,
     MediaPlayer,
+    PlayListData,
     State,
     add_file_to_playlist,
     init_raylib,
@@ -16,7 +16,7 @@ def main() -> None:
     init_raylib()
     pr.init_audio_device()
     media_player: MediaPlayer = MediaPlayer(State.WAITING)
-    data: MediaData = MediaData()
+    data: PlayListData = PlayListData()
 
     while not pr.window_should_close():
         if pr.is_file_dropped():

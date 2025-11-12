@@ -43,19 +43,11 @@ class Element(Enum):
 
 
 @dataclass
-class MediaData:
+class PlayListData:
+    music: Optional[pr.Music] = None
     file_paths: list = field(default_factory=list)
     file_path_counter: int = 0
-    music: Optional[pr.Music] = None
     current_track_index: int = -1
-    is_playing: bool = False
-    current_track_pos: any = field(
-        default_factory=lambda: pr.ffi.new("float *", 0.0)
-    )
-    current_vol_level = pr.ffi.new("float *", 0.3)
-    current_time: float = 0.0
-    total_time: float = 0.0
-    volume: float = 1.0
 
 
 @dataclass
@@ -171,7 +163,7 @@ transition_table: Dict[State, Dict[Event, State]] = {
 
 # not sure -> bool
 def update_state(
-    media_player: MediaPlayer, event: Event, data: MediaData
+    media_player: MediaPlayer, event: Event, data: PlayListData
 ) -> bool:
     current_state = media_player.current_state
     next_state = transition_table[current_state].get(
@@ -198,11 +190,11 @@ def update_state(
                 play_track(data)
 
         case State.PAUSE:
-            if data.is_playing:
+            if pr.is_music_stream_playing(data.music):
                 pr.pause_music_stream(data.music)
 
         case State.STOP:
-            if data.is_playing:
+            if pr.is_music_stream_playing(data.music):
                 pr.stop_music_stream(data.music)
 
         case State.PREV:
@@ -225,7 +217,7 @@ def update_state(
     return True
 
 
-def is_playlist_empty(data: MediaData) -> bool:
+def is_playlist_empty(data: PlayListData) -> bool:
     return data.file_path_counter <= 0
 
 
@@ -254,7 +246,7 @@ def return_layout(media_player: MediaPlayer) -> List[List[int]]:
             return _map_default
 
 
-def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
+def render_ui(media_player: MediaPlayer, data: PlayListData) -> None:
     layout = return_layout(media_player)
 
     width = pr.get_screen_width()
@@ -329,15 +321,33 @@ def render_ui(media_player: MediaPlayer, data: MediaData) -> None:
 
 
 def render_el_progress_bar(
-    progress_bar_bounds: pr.Rectangle, data: MediaData
-) -> float:
-    return pr.gui_progress_bar(
+    progress_bar_bounds: pr.Rectangle, data: PlayListData
+) -> None:
+    if not hasattr(render_el_progress_bar, "current_track_pos"):
+        render_el_progress_bar.current_track_pos = pr.ffi.new(
+            "float *", 0.0
+        )
+        render_el_progress_bar.total_track_time = pr.ffi.new(
+            "float *", 0.0
+        )
+        render_el_progress_bar.min_value = 0.0
+
+    current_track_pos = render_el_progress_bar.current_track_pos
+    total_track_time = render_el_progress_bar.total_track_time
+
+    if data.music is not None and pr.is_music_stream_playing(
+        data.music
+    ):
+        current_track_pos[0] = pr.get_music_time_played(data.music)
+        total_track_time[0] = pr.get_music_time_length(data.music)
+
+    pr.gui_progress_bar(
         progress_bar_bounds,
         b"",
         b"",
-        data.current_track_pos,
-        0.0,
-        data.total_time,
+        current_track_pos,
+        render_el_progress_bar.min_value,
+        total_track_time[0],
     )
 
 
@@ -362,16 +372,25 @@ def render_el_btn_next(control_btn_bounds: pr.Rectangle) -> bool:
 
 
 def render_el_volume_slider(
-    volume_bar_bounds: pr.Rectangle, data: MediaData
-) -> float:
-    return pr.gui_slider(
-        volume_bar_bounds, b"VOL ", b"", data.current_vol_level, 0, 1
+    volume_bar_bounds: pr.Rectangle, data: PlayListData
+) -> None:
+    if not hasattr(render_el_volume_slider, "current_vol_level"):
+        render_el_volume_slider.current_vol_level = pr.ffi.new(
+            "float *", 0.3
+        )
+
+    current_vol_level = render_el_volume_slider.current_vol_level
+    if data.music is not None:
+        pr.set_music_volume(data.music, current_vol_level[0])
+
+    pr.gui_slider(
+        volume_bar_bounds, b"VOL ", b"", current_vol_level, 0, 1
     )
 
 
 def render_el_drop_files(
     drop_files_bounds: pr.Rectangle,
-    data: MediaData,
+    data: PlayListData,
     cell_width: float,
     cell_height: float,
 ) -> None:
@@ -414,7 +433,7 @@ def render_el_drop_files(
 
 
 def draw_file_list(
-    data: MediaData,
+    data: PlayListData,
     bounds: pr.Rectangle,
     scroll: pr.Vector2,
     cell_width: float,
@@ -446,7 +465,7 @@ def draw_file_list(
         pr.draw_text(file_name, x, y, int(cell_height / 1.5), color)
 
 
-def add_file_to_playlist(data: MediaData) -> None:
+def add_file_to_playlist(data: PlayListData) -> None:
     if pr.is_file_dropped():
         dropped_files = pr.load_dropped_files()
         for i in range(dropped_files.count):
@@ -458,7 +477,7 @@ def add_file_to_playlist(data: MediaData) -> None:
         pr.unload_dropped_files(dropped_files)
 
 
-def load_track(data: MediaData) -> None:
+def load_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
     data.music = pr.load_music_stream(path.encode("utf-8"))
     if data.music is None:
@@ -466,21 +485,14 @@ def load_track(data: MediaData) -> None:
         return
 
 
-def play_track(data: MediaData) -> None:
+def play_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
     pr.play_music_stream(data.music)
-    data.is_playing = True
     print(f"Playing: {path}")
 
 
-def update_music_stream_if_needed(data: MediaData) -> None:
-    if data.music is not None:
-        pr.set_music_volume(data.music, data.current_vol_level[0])
-    if data.music is not None and data.is_playing:
+def update_music_stream_if_needed(data: PlayListData) -> None:
+    if data.music is not None and pr.is_music_stream_playing(
+        data.music
+    ):
         pr.update_music_stream(data.music)
-        data.current_track_pos[0] = pr.get_music_time_played(
-            data.music
-        )
-        data.total_time = pr.get_music_time_length(data.music)
-        if not pr.is_music_stream_playing(data.music):
-            data.is_playing = False
