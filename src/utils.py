@@ -49,6 +49,9 @@ class PlayListData:
     file_paths: list = field(default_factory=list)
     file_path_counter: int = 0
     current_track_index: int = -1
+    current_track_pos: float = pr.ffi.new("float *", 0.0)
+    total_track_time: float = pr.ffi.new("float *", 0.0)
+    current_vol_level: float = pr.ffi.new("float *", 0.3)
 
 
 @dataclass
@@ -343,31 +346,19 @@ def render_el_progress_bar(
         cell_x, cell_y, cell_width * 8, cell_height / 2
     )
 
-    if not hasattr(render_el_progress_bar, "current_track_pos"):
-        render_el_progress_bar.current_track_pos = pr.ffi.new(
-            "float *", 0.0
-        )
-        render_el_progress_bar.total_track_time = pr.ffi.new(
-            "float *", 0.0
-        )
-        render_el_progress_bar.min_value = 0.0
-
-    current_track_pos = render_el_progress_bar.current_track_pos
-    total_track_time = render_el_progress_bar.total_track_time
-
     if data.music is not None and pr.is_music_stream_playing(
         data.music
     ):
-        current_track_pos[0] = pr.get_music_time_played(data.music)
-        total_track_time[0] = pr.get_music_time_length(data.music)
+        data.current_track_pos[0] = pr.get_music_time_played(data.music)
+        data.total_track_time[0] = pr.get_music_time_length(data.music)
 
     pr.gui_progress_bar(
         progress_bar_bounds,
         b"",
         b"",
-        current_track_pos,
-        render_el_progress_bar.min_value,
-        total_track_time[0],
+        data.current_track_pos,
+        0.0,
+        data.total_track_time[0],
     )
 
 
@@ -450,17 +441,11 @@ def render_el_volume_slider(
         cell_height / 2,
     )
 
-    if not hasattr(render_el_volume_slider, "current_vol_level"):
-        render_el_volume_slider.current_vol_level = pr.ffi.new(
-            "float *", 0.3
-        )
-
-    current_vol_level = render_el_volume_slider.current_vol_level
     if data.music is not None:
-        pr.set_music_volume(data.music, current_vol_level[0])
+        pr.set_music_volume(data.music, data.current_vol_level[0])
 
     pr.gui_slider(
-        volume_bar_bounds, b"VOL ", b"", current_vol_level, 0, 1
+        volume_bar_bounds, b"VOL ", b"", data.current_vol_level, 0, 1
     )
 
 
