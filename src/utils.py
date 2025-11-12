@@ -15,6 +15,7 @@ BGCOLOR = pr.Color(0, 34, 43, 255)
 class State(Enum):
     WAITING = "WAITING"
     PLAY = "PLAY"
+    RESUMED = "RESUMED"
     PAUSE = "PAUSE"
     STOP = "STOP"
     PREV = "PREV"
@@ -130,8 +131,15 @@ transition_table: Dict[State, Dict[Event, State]] = {
         Event.prev: State.PREV,
         Event.next: State.NEXT,
     },
+    State.RESUMED: {
+        Event.play: State.INVALID,
+        Event.pause: State.PAUSE,
+        Event.stop: State.STOP,
+        Event.prev: State.PREV,
+        Event.next: State.NEXT,
+    },
     State.PAUSE: {
-        Event.play: State.PLAY,
+        Event.play: State.RESUMED,
         Event.pause: State.INVALID,
         Event.stop: State.STOP,
         Event.prev: State.PREV,
@@ -181,11 +189,15 @@ def update_state(
         case State.WAITING:
             pass
         case State.PLAY:
-            # and pr.resume_music_stream??? PAUSE -> PLAY
             if is_playlist_empty(data) is False:
                 print(f"state play: counter{data.file_path_counter}")
                 load_track(data)
                 play_track(data)
+
+        case State.RESUMED:
+            if is_playlist_empty(data) is False:
+                print(f"state play: counter{data.file_path_counter}")
+                resume_track(data)
 
         case State.PAUSE:
             if data.music is not None and pr.is_music_stream_playing(
@@ -235,7 +247,7 @@ def init_raylib() -> None:
 
 def get_layout(media_player: MediaPlayer) -> List[List[int]]:
     match media_player.current_state:
-        case State.PLAY:
+        case State.PLAY | State.RESUMED:
             return _map_state_play
         case (
             State.WAITING
@@ -560,6 +572,13 @@ def play_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
     if data.music is not None:
         pr.play_music_stream(data.music)
+        print(f"Playing: {path}")
+
+
+def resume_track(data: PlayListData) -> None:
+    path = data.file_paths[data.current_track_index]
+    if data.music is not None:
+        pr.resume_music_stream(data.music)
         print(f"Playing: {path}")
 
 
