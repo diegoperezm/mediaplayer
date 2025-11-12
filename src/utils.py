@@ -211,6 +211,7 @@ def update_state(
                 data.music
             ):
                 pr.stop_music_stream(data.music)
+                data.current_track_pos[0] = pr.get_music_time_played(data.music)
 
         case State.PREV:
             if is_playlist_empty(data) is False:
