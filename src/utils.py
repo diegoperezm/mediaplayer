@@ -56,6 +56,58 @@ class MediaPlayer:
     current_state: State = State.WAITING
 
 
+transition_table: Dict[State, Dict[Event, State]] = {
+    State.WAITING: {
+        Event.play: State.PLAYING,
+        Event.pause: State.INVALID,
+        Event.stop: State.INVALID,
+        Event.prev: State.INVALID,
+        Event.next: State.INVALID,
+    },
+    State.PLAYING: {
+        Event.play: State.INVALID,
+        Event.pause: State.PAUSED,
+        Event.stop: State.STOPPED,
+        Event.prev: State.PREV,
+        Event.next: State.NEXT,
+    },
+    State.RESUMED: {
+        Event.play: State.INVALID,
+        Event.pause: State.PAUSED,
+        Event.stop: State.STOPPED,
+        Event.prev: State.PREV,
+        Event.next: State.NEXT,
+    },
+    State.PAUSED: {
+        Event.play: State.RESUMED,
+        Event.pause: State.INVALID,
+        Event.stop: State.STOPPED,
+        Event.prev: State.PREV,
+        Event.next: State.NEXT,
+    },
+    State.STOPPED: {
+        Event.play: State.PLAYING,
+        Event.pause: State.INVALID,
+        Event.stop: State.INVALID,
+        Event.prev: State.PREV,
+        Event.next: State.NEXT,
+    },
+    State.PREV: {
+        Event.play: State.PLAYING,
+        Event.pause: State.INVALID,
+        Event.stop: State.INVALID,
+        Event.prev: State.INVALID,
+        Event.next: State.INVALID,
+    },
+    State.NEXT: {
+        Event.play: State.PLAYING,
+        Event.pause: State.INVALID,
+        Event.stop: State.INVALID,
+        Event.prev: State.INVALID,
+        Event.next: State.INVALID,
+    },
+}
+
 _map_default: List[List[int]] = [
     [0] * SIZE_COLS for _ in range(SIZE_ROWS)
 ]
@@ -115,58 +167,6 @@ _map_state_play: List[List[int]] = [
         0,
     ],
 ]
-
-transition_table: Dict[State, Dict[Event, State]] = {
-    State.WAITING: {
-        Event.play: State.PLAYING,
-        Event.pause: State.INVALID,
-        Event.stop: State.INVALID,
-        Event.prev: State.INVALID,
-        Event.next: State.INVALID,
-    },
-    State.PLAYING: {
-        Event.play: State.INVALID,
-        Event.pause: State.PAUSED,
-        Event.stop: State.STOPPED,
-        Event.prev: State.PREV,
-        Event.next: State.NEXT,
-    },
-    State.RESUMED: {
-        Event.play: State.INVALID,
-        Event.pause: State.PAUSED,
-        Event.stop: State.STOPPED,
-        Event.prev: State.PREV,
-        Event.next: State.NEXT,
-    },
-    State.PAUSED: {
-        Event.play: State.RESUMED,
-        Event.pause: State.INVALID,
-        Event.stop: State.STOPPED,
-        Event.prev: State.PREV,
-        Event.next: State.NEXT,
-    },
-    State.STOPPED: {
-        Event.play: State.PLAYING,
-        Event.pause: State.INVALID,
-        Event.stop: State.INVALID,
-        Event.prev: State.PREV,
-        Event.next: State.NEXT,
-    },
-    State.PREV: {
-        Event.play: State.PLAYING,
-        Event.pause: State.INVALID,
-        Event.stop: State.INVALID,
-        Event.prev: State.INVALID,
-        Event.next: State.INVALID,
-    },
-    State.NEXT: {
-        Event.play: State.PLAYING,
-        Event.pause: State.INVALID,
-        Event.stop: State.INVALID,
-        Event.prev: State.INVALID,
-        Event.next: State.INVALID,
-    },
-}
 
 
 def update_state(
