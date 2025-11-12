@@ -161,10 +161,9 @@ transition_table: Dict[State, Dict[Event, State]] = {
 }
 
 
-# not sure -> bool
 def update_state(
     media_player: MediaPlayer, event: Event, data: PlayListData
-) -> bool:
+) -> None:
     current_state = media_player.current_state
     next_state = transition_table[current_state].get(
         event, State.INVALID
@@ -214,8 +213,6 @@ def update_state(
                 )
             update_state(media_player, Event.play, data)
 
-    return True
-
 
 def is_playlist_empty(data: PlayListData) -> bool:
     return data.file_path_counter <= 0
@@ -230,7 +227,7 @@ def init_raylib() -> None:
     rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
 
-def return_layout(media_player: MediaPlayer) -> List[List[int]]:
+def get_layout(media_player: MediaPlayer) -> List[List[int]]:
     match media_player.current_state:
         case State.PLAY:
             return _map_state_play
@@ -247,7 +244,7 @@ def return_layout(media_player: MediaPlayer) -> List[List[int]]:
 
 
 def render_ui(media_player: MediaPlayer, data: PlayListData) -> None:
-    layout = return_layout(media_player)
+    layout = get_layout(media_player)
 
     width = pr.get_screen_width()
     height = pr.get_screen_height()
