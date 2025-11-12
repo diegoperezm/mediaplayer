@@ -173,7 +173,6 @@ def update_state(
         print(
             f"Invalid transition: {event.name} from {current_state.name}"
         )
-        return False
 
     media_player.current_state = next_state
     print(f"{current_state.name} -> {next_state.name}")
