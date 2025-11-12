@@ -8,7 +8,6 @@ from utils import (
     pr,
     render_ui,
     update_music_stream_if_needed,
-    update_state,
 )
 
 

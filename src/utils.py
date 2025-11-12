@@ -190,11 +190,11 @@ def update_state(
                 play_track(data)
 
         case State.PAUSE:
-            if pr.is_music_stream_playing(data.music):
+            if data.music is not None and pr.is_music_stream_playing(data.music):
                 pr.pause_music_stream(data.music)
 
         case State.STOP:
-            if pr.is_music_stream_playing(data.music):
+            if data.music is not None and pr.is_music_stream_playing(data.music):
                 pr.stop_music_stream(data.music)
 
         case State.PREV:
@@ -260,69 +260,74 @@ def render_ui(media_player: MediaPlayer, data: PlayListData) -> None:
             cell_x = col * cell_width
             cell_y = row * cell_height
 
-            drop_files_bounds = pr.Rectangle(
-                cell_x, cell_y, cell_width * 12, cell_height * 11
-            )
-            control_btn_bounds = pr.Rectangle(
-                cell_x, cell_y, cell_width, cell_height
-            )
-            progress_bar_bounds = pr.Rectangle(
-                cell_x, cell_y, cell_width * 8, cell_height / 2
-            )
-            volume_bar_bounds = pr.Rectangle(
-                cell_x,
-                cell_y + (cell_height / 2),
-                cell_width * 7,
-                cell_height / 2,
-            )
-
             match element:
                 case Element.EL_BLANK.value:
                     pass
 
                 case Element.EL_PROGRESS_BAR.value:
-                    render_el_progress_bar(progress_bar_bounds, data)
+                    render_el_progress_bar(
+                        cell_x, cell_y, cell_width, cell_height, data
+                    )
 
                 case Element.EL_BTN_PREV.value:
-                    clicked = render_el_btn_prev(control_btn_bounds)
+                    clicked = render_el_btn_prev(
+                        cell_x, cell_y, cell_width, cell_height
+                    )
                     if clicked:
                         update_state(media_player, Event.prev, data)
 
                 case Element.EL_BTN_PLAY.value:
-                    clicked = render_el_btn_play(control_btn_bounds)
+                    clicked = render_el_btn_play(
+                        cell_x, cell_y, cell_width, cell_height
+                    )
                     if clicked:
                         update_state(media_player, Event.play, data)
 
                 case Element.EL_BTN_PAUSE.value:
-                    clicked = render_el_btn_pause(control_btn_bounds)
+                    clicked = render_el_btn_pause(
+                        cell_x, cell_y, cell_width, cell_height
+                    )
                     if clicked:
                         update_state(media_player, Event.pause, data)
 
                 case Element.EL_BTN_STOP.value:
-                    clicked = render_el_btn_stop(control_btn_bounds)
+                    clicked = render_el_btn_stop(
+                        cell_x, cell_y, cell_width, cell_height
+                    )
                     if clicked:
                         update_state(media_player, Event.stop, data)
 
                 case Element.EL_BTN_NEXT.value:
-                    clicked = render_el_btn_next(control_btn_bounds)
+                    clicked = render_el_btn_next(
+                        cell_x, cell_y, cell_width, cell_height
+                    )
                     if clicked:
                         update_state(media_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
-                    render_el_volume_slider(volume_bar_bounds, data)
+                    render_el_volume_slider(cell_x, cell_y, cell_width, cell_height, data)
 
                 case Element.EL_DROP_FILES.value:
                     render_el_drop_files(
-                        drop_files_bounds,
-                        data,
+                        cell_x,
+                        cell_y,
                         cell_width,
                         cell_height,
+                        data,
                     )
 
 
 def render_el_progress_bar(
-    progress_bar_bounds: pr.Rectangle, data: PlayListData
+    cell_x: float,
+    cell_y: float,
+    cell_width: float,
+    cell_height: float,
+    data: PlayListData,
 ) -> None:
+    progress_bar_bounds = pr.Rectangle(
+        cell_x, cell_y, cell_width * 8, cell_height / 2
+    )
+
     if not hasattr(render_el_progress_bar, "current_track_pos"):
         render_el_progress_bar.current_track_pos = pr.ffi.new(
             "float *", 0.0
@@ -351,29 +356,85 @@ def render_el_progress_bar(
     )
 
 
-def render_el_btn_prev(control_btn_bounds: pr.Rectangle) -> bool:
+def render_el_btn_prev(
+    cell_x: float,
+    cell_y: float,
+    cell_width: float,
+    cell_height: float,
+) -> bool:
+    control_btn_bounds = pr.Rectangle(
+        cell_x, cell_y, cell_width, cell_height
+    )
+
     return pr.gui_button(control_btn_bounds, b"<<")
 
 
-def render_el_btn_play(control_btn_bounds: pr.Rectangle) -> bool:
+def render_el_btn_play(
+    cell_x: float,
+    cell_y: float,
+    cell_width: float,
+    cell_height: float,
+) -> bool:
+    control_btn_bounds = pr.Rectangle(
+        cell_x, cell_y, cell_width, cell_height
+    )
+
     return pr.gui_button(control_btn_bounds, b">")
 
 
-def render_el_btn_pause(control_btn_bounds: pr.Rectangle) -> bool:
+def render_el_btn_pause(
+    cell_x: float,
+    cell_y: float,
+    cell_width: float,
+    cell_height: float,
+) -> bool:
+    control_btn_bounds = pr.Rectangle(
+        cell_x, cell_y, cell_width, cell_height
+    )
+
     return pr.gui_button(control_btn_bounds, b"||")
 
 
-def render_el_btn_stop(control_btn_bounds: pr.Rectangle) -> bool:
+def render_el_btn_stop(
+    cell_x: float,
+    cell_y: float,
+    cell_width: float,
+    cell_height: float,
+) -> bool:
+    control_btn_bounds = pr.Rectangle(
+        cell_x, cell_y, cell_width, cell_height
+    )
+
     return pr.gui_button(control_btn_bounds, b"[]")
 
 
-def render_el_btn_next(control_btn_bounds: pr.Rectangle) -> bool:
+def render_el_btn_next(
+    cell_x: float,
+    cell_y: float,
+    cell_width: float,
+    cell_height: float,
+) -> bool:
+    control_btn_bounds = pr.Rectangle(
+        cell_x, cell_y, cell_width, cell_height
+    )
+
     return pr.gui_button(control_btn_bounds, b">>")
 
 
 def render_el_volume_slider(
-    volume_bar_bounds: pr.Rectangle, data: PlayListData
+    cell_x: float,
+    cell_y: float,
+    cell_width: float,
+    cell_height: float,
+    data: PlayListData
 ) -> None:
+    volume_bar_bounds = pr.Rectangle(
+        cell_x,
+        cell_y + (cell_height / 2),
+        cell_width * 7,
+        cell_height / 2,
+    )
+
     if not hasattr(render_el_volume_slider, "current_vol_level"):
         render_el_volume_slider.current_vol_level = pr.ffi.new(
             "float *", 0.3
@@ -389,11 +450,16 @@ def render_el_volume_slider(
 
 
 def render_el_drop_files(
-    drop_files_bounds: pr.Rectangle,
-    data: PlayListData,
+    cell_x: float,
+    cell_y: float,
     cell_width: float,
     cell_height: float,
+    data: PlayListData,
 ) -> None:
+    drop_files_bounds = pr.Rectangle(
+        cell_x, cell_y, cell_width * 12, cell_height * 11
+    )
+
     if not hasattr(render_el_drop_files, "scroll"):
         render_el_drop_files.scroll = pr.Vector2(0, 0)
         render_el_drop_files.view = pr.Rectangle(0, 0, 0, 0)
@@ -487,8 +553,9 @@ def load_track(data: PlayListData) -> None:
 
 def play_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
-    pr.play_music_stream(data.music)
-    print(f"Playing: {path}")
+    if data.music is not None:
+        pr.play_music_stream(data.music)
+        print(f"Playing: {path}")
 
 
 def update_music_stream_if_needed(data: PlayListData) -> None:
