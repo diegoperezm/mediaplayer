@@ -14,10 +14,10 @@ BGCOLOR = pr.Color(0, 34, 43, 255)
 
 class State(Enum):
     WAITING = "WAITING"
-    PLAY = "PLAY"
+    PLAYING = "PLAYING"
     RESUMED = "RESUMED"
-    PAUSE = "PAUSE"
-    STOP = "STOP"
+    PAUSED = "PAUSED"
+    STOPPED = "STOPPED"
     PREV = "PREV"
     NEXT = "NEXT"
     INVALID = "INVALID"
@@ -35,9 +35,9 @@ class Element(Enum):
     EL_BLANK = 0
     EL_DROP_FILES = 1
     EL_BTN_PREV = 2
-    EL_BTN_PLAY = 3
-    EL_BTN_PAUSE = 4
-    EL_BTN_STOP = 5
+    EL_BTN_PLAYING = 3
+    EL_BTN_PAUSED = 4
+    EL_BTN_STOPPED = 5
     EL_BTN_NEXT = 6
     EL_PROGRESS_BAR = 7
     EL_VOLUME_SLIDER = 8
@@ -74,8 +74,8 @@ _map_state_waiting: List[List[int]] = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [
         Element.EL_BTN_PREV.value,
-        Element.EL_BTN_PLAY.value,
-        Element.EL_BTN_STOP.value,
+        Element.EL_BTN_PLAYING.value,
+        Element.EL_BTN_STOPPED.value,
         Element.EL_BTN_NEXT.value,
         Element.EL_PROGRESS_BAR.value,
         Element.EL_VOLUME_SLIDER.value,
@@ -102,8 +102,8 @@ _map_state_play: List[List[int]] = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [
         Element.EL_BTN_PREV.value,
-        Element.EL_BTN_PAUSE.value,  # <- Different from waiting
-        Element.EL_BTN_STOP.value,
+        Element.EL_BTN_PAUSED.value,  # <- Different from waiting
+        Element.EL_BTN_STOPPED.value,
         Element.EL_BTN_NEXT.value,
         Element.EL_PROGRESS_BAR.value,
         Element.EL_VOLUME_SLIDER.value,
@@ -118,49 +118,49 @@ _map_state_play: List[List[int]] = [
 
 transition_table: Dict[State, Dict[Event, State]] = {
     State.WAITING: {
-        Event.play: State.PLAY,
+        Event.play: State.PLAYING,
         Event.pause: State.INVALID,
         Event.stop: State.INVALID,
         Event.prev: State.INVALID,
         Event.next: State.INVALID,
     },
-    State.PLAY: {
+    State.PLAYING: {
         Event.play: State.INVALID,
-        Event.pause: State.PAUSE,
-        Event.stop: State.STOP,
+        Event.pause: State.PAUSED,
+        Event.stop: State.STOPPED,
         Event.prev: State.PREV,
         Event.next: State.NEXT,
     },
     State.RESUMED: {
         Event.play: State.INVALID,
-        Event.pause: State.PAUSE,
-        Event.stop: State.STOP,
+        Event.pause: State.PAUSED,
+        Event.stop: State.STOPPED,
         Event.prev: State.PREV,
         Event.next: State.NEXT,
     },
-    State.PAUSE: {
+    State.PAUSED: {
         Event.play: State.RESUMED,
         Event.pause: State.INVALID,
-        Event.stop: State.STOP,
+        Event.stop: State.STOPPED,
         Event.prev: State.PREV,
         Event.next: State.NEXT,
     },
-    State.STOP: {
-        Event.play: State.PLAY,
+    State.STOPPED: {
+        Event.play: State.PLAYING,
         Event.pause: State.INVALID,
         Event.stop: State.INVALID,
         Event.prev: State.PREV,
         Event.next: State.NEXT,
     },
     State.PREV: {
-        Event.play: State.PLAY,
+        Event.play: State.PLAYING,
         Event.pause: State.INVALID,
         Event.stop: State.INVALID,
         Event.prev: State.INVALID,
         Event.next: State.INVALID,
     },
     State.NEXT: {
-        Event.play: State.PLAY,
+        Event.play: State.PLAYING,
         Event.pause: State.INVALID,
         Event.stop: State.INVALID,
         Event.prev: State.INVALID,
@@ -188,23 +188,22 @@ def update_state(
     match next_state:
         case State.WAITING:
             pass
-        case State.PLAY:
+        case State.PLAYING:
             if is_playlist_empty(data) is False:
                 load_track(data)
                 play_track(data)
 
         case State.RESUMED:
             if is_playlist_empty(data) is False:
-                print(f"state play: counter{data.file_path_counter}")
                 resume_track(data)
 
-        case State.PAUSE:
+        case State.PAUSED:
             if data.music is not None and pr.is_music_stream_playing(
                 data.music
             ):
                 pr.pause_music_stream(data.music)
 
-        case State.STOP:
+        case State.STOPPED:
             if data.music is not None and pr.is_music_stream_playing(
                 data.music
             ):
@@ -246,12 +245,12 @@ def init_raylib() -> None:
 
 def get_layout(media_player: MediaPlayer) -> List[List[int]]:
     match media_player.current_state:
-        case State.PLAY | State.RESUMED:
+        case State.PLAYING | State.RESUMED:
             return _map_state_play
         case (
             State.WAITING
-            | State.PAUSE
-            | State.STOP
+            | State.PAUSED
+            | State.STOPPED
             | State.PREV
             | State.NEXT
         ):
@@ -290,21 +289,21 @@ def render_ui(media_player: MediaPlayer, data: PlayListData) -> None:
                     if clicked:
                         update_state(media_player, Event.prev, data)
 
-                case Element.EL_BTN_PLAY.value:
+                case Element.EL_BTN_PLAYING.value:
                     clicked = render_el_btn_play(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked:
                         update_state(media_player, Event.play, data)
 
-                case Element.EL_BTN_PAUSE.value:
+                case Element.EL_BTN_PAUSED.value:
                     clicked = render_el_btn_pause(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked:
                         update_state(media_player, Event.pause, data)
 
-                case Element.EL_BTN_STOP.value:
+                case Element.EL_BTN_STOPPED.value:
                     clicked = render_el_btn_stop(
                         cell_x, cell_y, cell_width, cell_height
                     )
