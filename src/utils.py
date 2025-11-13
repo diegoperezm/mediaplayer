@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional
 
-#import resource
+# import resource
 import pyray as pr
 import raylib as rl
 
@@ -177,57 +177,51 @@ def update_state(
     media_player: MediaPlayer, event: Event, data: PlayListData
 ) -> None:
     current_state = media_player.current_state
+
     next_state = transition_table[current_state].get(
         event, State.INVALID
     )
 
-    if next_state is State.INVALID:
+    if next_state is not State.INVALID:
+        media_player.current_state = next_state
+        print(
+            f"current state: {current_state.name} -> next state: {media_player.current_state}"
+        )
+    else:
         print(
             f"Invalid transition: {event.name} from {current_state.name}"
         )
-
-    media_player.current_state = next_state
-    print(f"{current_state.name} -> {next_state.name}")
 
     match next_state:
         case State.WAITING:
             pass
         case State.PLAYING:
-            if is_playlist_empty(data) is False:
-                load_track(data)
-                play_track(data)
+            load_track(data)
+            play_track(data)
 
         case State.RESUMED:
-            if is_playlist_empty(data) is False:
-                resume_track(data)
+            resume_track(data)
 
         case State.PAUSED:
-            if data.music is not None and pr.is_music_stream_playing(
-                data.music
-            ):
-                pr.pause_music_stream(data.music)
+            pr.pause_music_stream(data.music)
 
         case State.STOPPED:
-            if data.music is not None and pr.is_music_stream_playing(
+            pr.stop_music_stream(data.music)
+            data.current_track_pos[0] = pr.get_music_time_played(
                 data.music
-            ):
-                pr.stop_music_stream(data.music)
-                data.current_track_pos[0] = pr.get_music_time_played(data.music)
-                pr.unload_music_stream(data.music) # TODO: required? 
+            )
+            pr.unload_music_stream(data.music)  # TODO: required?
 
         case State.PREV:
-            if is_playlist_empty(data) is False:
-                data.current_track_index = get_prev_track(data)
-                if pr.is_music_stream_playing(data.music): 
-                    pr.unload_music_stream(data.music)
-
+            data.current_track_index = get_prev_track(data)
+            if pr.is_music_stream_playing(data.music):
+                pr.unload_music_stream(data.music)
             update_state(media_player, Event.play, data)
 
         case State.NEXT:
-            if is_playlist_empty(data) is False:
-                data.current_track_index = get_next_track(data)
-                if pr.is_music_stream_playing(data.music):
-                    pr.unload_music_stream(data.music)
+            data.current_track_index = get_next_track(data)
+            if pr.is_music_stream_playing(data.music):
+                pr.unload_music_stream(data.music)
             update_state(media_player, Event.play, data)
 
 
@@ -311,21 +305,29 @@ def render_ui(media_player: MediaPlayer, data: PlayListData) -> None:
                     clicked = render_el_btn_pause(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked  and is_playlist_empty(data) is False:
+                    if (
+                        clicked
+                        and data.music is not None
+                        and pr.is_music_stream_playing(data.music)
+                    ):
                         update_state(media_player, Event.pause, data)
 
                 case Element.EL_BTN_STOP.value:
                     clicked = render_el_btn_stop(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked  and is_playlist_empty(data) is False:
+                    if (
+                        clicked
+                        and data.music is not None
+                        and pr.is_music_stream_playing(data.music)
+                    ):
                         update_state(media_player, Event.stop, data)
 
                 case Element.EL_BTN_NEXT.value:
                     clicked = render_el_btn_next(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked  and is_playlist_empty(data) is False:
+                    if clicked and is_playlist_empty(data) is False:
                         update_state(media_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
@@ -357,8 +359,12 @@ def render_el_progress_bar(
     if data.music is not None and pr.is_music_stream_playing(
         data.music
     ):
-        data.current_track_pos[0] = pr.get_music_time_played(data.music)
-        data.total_track_time[0] = pr.get_music_time_length(data.music)
+        data.current_track_pos[0] = pr.get_music_time_played(
+            data.music
+        )
+        data.total_track_time[0] = pr.get_music_time_length(
+            data.music
+        )
 
     pr.gui_progress_bar(
         progress_bar_bounds,
@@ -549,7 +555,7 @@ def add_file_to_playlist(data: PlayListData) -> None:
             data.file_paths.append(path)
             data.file_path_counter += 1
         if data.current_track_index is -1:
-            data.current_track_index = 0 
+            data.current_track_index = 0
         pr.unload_dropped_files(dropped_files)
 
 
@@ -582,9 +588,7 @@ def update_music_stream_if_needed(data: PlayListData) -> None:
         pr.update_music_stream(data.music)
 
 
-
-#def get_memory_usage_mb() -> float:
+# def get_memory_usage_mb() -> float:
 #    usage_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
 #    return usage_kb / 1024  # convert KB → MB on Linux
-    # print(f"Memory usage: {get_memory_usage_mb():.2f} MB")
-
+# print(f"Memory usage: {get_memory_usage_mb():.2f} MB")
