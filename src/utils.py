@@ -46,7 +46,7 @@ class Element(Enum):
 
 @dataclass
 class PlayListData:
-    music: pr.Music = pr.Music()
+    music: Optional[pr.Music] = None 
     file_paths: list = field(default_factory=list)
     file_path_counter: int = 0
     current_track_index: int = -1
