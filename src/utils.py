@@ -225,6 +225,7 @@ def get_prev_track(data: PlayListData) -> int:
     ) % data.file_path_counter
 
 
+
 def get_next_track(data: PlayListData) -> int:
     return (data.current_track_index + 1) % data.file_path_counter
 
@@ -352,13 +353,15 @@ def render_el_progress_bar(
         data.current_track_pos[0] = pr.get_music_time_played(data.music)
         data.total_track_time[0] = pr.get_music_time_length(data.music)
 
+    total_track_time_max = max(data.total_track_time[0],0.001)
+
     pr.gui_progress_bar(
         bounds,
         b"",
         b"",
         data.current_track_pos,
         0.0,
-        data.total_track_time[0],
+        total_track_time_max,
     )
 
 
