@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional
 
+#import resource
 import pyray as pr
 import raylib as rl
 
@@ -212,15 +213,21 @@ def update_state(
             ):
                 pr.stop_music_stream(data.music)
                 data.current_track_pos[0] = pr.get_music_time_played(data.music)
+                pr.unload_music_stream(data.music) # TODO: required? 
 
         case State.PREV:
             if is_playlist_empty(data) is False:
                 data.current_track_index = get_prev_track(data)
+                if pr.is_music_stream_playing(data.music): 
+                    pr.unload_music_stream(data.music)
+
             update_state(media_player, Event.play, data)
 
         case State.NEXT:
             if is_playlist_empty(data) is False:
                 data.current_track_index = get_next_track(data)
+                if pr.is_music_stream_playing(data.music):
+                    pr.unload_music_stream(data.music)
             update_state(media_player, Event.play, data)
 
 
@@ -541,6 +548,8 @@ def add_file_to_playlist(data: PlayListData) -> None:
             )
             data.file_paths.append(path)
             data.file_path_counter += 1
+        if data.current_track_index is -1:
+            data.current_track_index = 0 
         pr.unload_dropped_files(dropped_files)
 
 
@@ -571,3 +580,11 @@ def update_music_stream_if_needed(data: PlayListData) -> None:
         data.music
     ):
         pr.update_music_stream(data.music)
+
+
+
+#def get_memory_usage_mb() -> float:
+#    usage_kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+#    return usage_kb / 1024  # convert KB → MB on Linux
+    # print(f"Memory usage: {get_memory_usage_mb():.2f} MB")
+
