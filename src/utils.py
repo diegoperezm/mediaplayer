@@ -297,35 +297,35 @@ def render_ui(media_player: MediaPlayer, data: PlayListData) -> None:
                     clicked = render_el_btn_prev(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked:
+                    if clicked and is_playlist_empty(data) is False:
                         update_state(media_player, Event.prev, data)
 
                 case Element.EL_BTN_PLAY.value:
                     clicked = render_el_btn_play(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked:
+                    if clicked and is_playlist_empty(data) is False:
                         update_state(media_player, Event.play, data)
 
                 case Element.EL_BTN_PAUSE.value:
                     clicked = render_el_btn_pause(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked:
+                    if clicked  and is_playlist_empty(data) is False:
                         update_state(media_player, Event.pause, data)
 
                 case Element.EL_BTN_STOP.value:
                     clicked = render_el_btn_stop(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked:
+                    if clicked  and is_playlist_empty(data) is False:
                         update_state(media_player, Event.stop, data)
 
                 case Element.EL_BTN_NEXT.value:
                     clicked = render_el_btn_next(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked:
+                    if clicked  and is_playlist_empty(data) is False:
                         update_state(media_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
