@@ -36,9 +36,9 @@ class Element(Enum):
     EL_BLANK = 0
     EL_DROP_FILES = 1
     EL_BTN_PREV = 2
-    EL_BTN_PLAYING = 3
-    EL_BTN_PAUSED = 4
-    EL_BTN_STOPPED = 5
+    EL_BTN_PLAY = 3
+    EL_BTN_PAUSE = 4
+    EL_BTN_STOP = 5
     EL_BTN_NEXT = 6
     EL_PROGRESS_BAR = 7
     EL_VOLUME_SLIDER = 8
@@ -130,8 +130,8 @@ _map_state_waiting: List[List[int]] = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [
         Element.EL_BTN_PREV.value,
-        Element.EL_BTN_PLAYING.value,
-        Element.EL_BTN_STOPPED.value,
+        Element.EL_BTN_PLAY.value,
+        Element.EL_BTN_STOP.value,
         Element.EL_BTN_NEXT.value,
         Element.EL_PROGRESS_BAR.value,
         Element.EL_VOLUME_SLIDER.value,
@@ -158,8 +158,8 @@ _map_state_play: List[List[int]] = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     [
         Element.EL_BTN_PREV.value,
-        Element.EL_BTN_PAUSED.value,  # <- Different from waiting
-        Element.EL_BTN_STOPPED.value,
+        Element.EL_BTN_PAUSE.value,  # <- Different from waiting
+        Element.EL_BTN_STOP.value,
         Element.EL_BTN_NEXT.value,
         Element.EL_PROGRESS_BAR.value,
         Element.EL_VOLUME_SLIDER.value,
@@ -300,21 +300,21 @@ def render_ui(media_player: MediaPlayer, data: PlayListData) -> None:
                     if clicked:
                         update_state(media_player, Event.prev, data)
 
-                case Element.EL_BTN_PLAYING.value:
+                case Element.EL_BTN_PLAY.value:
                     clicked = render_el_btn_play(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked:
                         update_state(media_player, Event.play, data)
 
-                case Element.EL_BTN_PAUSED.value:
+                case Element.EL_BTN_PAUSE.value:
                     clicked = render_el_btn_pause(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked:
                         update_state(media_player, Event.pause, data)
 
-                case Element.EL_BTN_STOPPED.value:
+                case Element.EL_BTN_STOP.value:
                     clicked = render_el_btn_stop(
                         cell_x, cell_y, cell_width, cell_height
                     )
