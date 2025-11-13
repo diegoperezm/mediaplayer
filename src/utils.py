@@ -499,11 +499,11 @@ def render_el_drop_files(
         int(data.view.width),
         int(data.view.height),
     )
-    draw_file_list(data, bounds, data.scroll, cell_width, cell_height)
+    render_file_list(data, bounds, data.scroll, cell_width, cell_height)
     pr.end_scissor_mode()
 
 
-def draw_file_list(
+def render_file_list(
     data: PlayListData,
     bounds: pr.Rectangle,
     scroll: pr.Vector2,
