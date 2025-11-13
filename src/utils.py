@@ -46,7 +46,7 @@ class Element(Enum):
 
 @dataclass
 class PlayListData:
-    music: Optional[pr.Music] = None 
+    music: Optional[pr.Music] = None
     file_paths: list = field(default_factory=list)
     file_path_counter: int = 0
     current_track_index: int = -1
@@ -431,10 +431,10 @@ def render_el_volume_slider(
         cell_height / 2,
     )
 
+    pr.gui_slider(bounds, b"VOL ", b"", data.current_vol_level, 0, 1)
+
     if data.music is not None:
         pr.set_music_volume(data.music, data.current_vol_level[0])
-
-    pr.gui_slider(bounds, b"VOL ", b"", data.current_vol_level, 0, 1)
 
 
 def get_content_height(
