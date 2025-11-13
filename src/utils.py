@@ -182,11 +182,15 @@ def update_state(
 
     if next_state is not State.INVALID:
         music_player.current_state = next_state
-        print(
-            f"current state: {current_state.name} -> next state: {music_player.current_state}"
+        pr.trace_log(
+            pr.LOG_INFO,
+            f"current state: {current_state.name} -> next state: {music_player.current_state.name}",
         )
     else:
-        print(f"Invalid transition: {event.name} from {current_state.name}")
+        pr.trace_log(
+            pr.LOG_WARNING,
+            f"Invalid transition: {event.name} from {current_state.name}",
+        )
 
     match next_state:
         case State.WAITING:
@@ -223,7 +227,6 @@ def get_prev_track(data: PlayListData) -> int:
     return (
         data.current_track_index - 1 + data.file_path_counter
     ) % data.file_path_counter
-
 
 
 def get_next_track(data: PlayListData) -> int:
@@ -353,7 +356,7 @@ def render_el_progress_bar(
         data.current_track_pos[0] = pr.get_music_time_played(data.music)
         data.total_track_time[0] = pr.get_music_time_length(data.music)
 
-    total_track_time_max = max(data.total_track_time[0],0.001)
+    total_track_time_max = max(data.total_track_time[0], 0.001)
 
     pr.gui_progress_bar(
         bounds,
@@ -535,8 +538,7 @@ def load_track(data: PlayListData) -> None:
     data.music = pr.load_music_stream(path.encode("utf-8"))
     # check if playlist is empty?
     if data.music is None:
-        print(f"Failed to load: {path}")
-        return
+        pr.trace_log(pr.LOG_WARNING, f"Failed to load: {path}")
 
 
 def play_track(data: PlayListData) -> None:
@@ -544,7 +546,6 @@ def play_track(data: PlayListData) -> None:
     # check if playlist is empty?
     if data.music is not None:
         pr.play_music_stream(data.music)
-        print(f"Playing: {path}")
 
 
 def resume_track(data: PlayListData) -> None:
