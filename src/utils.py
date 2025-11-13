@@ -56,7 +56,7 @@ class PlayListData:
 
 
 @dataclass
-class MediaPlayer:
+class AudioPlayer:
     current_state: State = State.WAITING
 
 
@@ -174,7 +174,7 @@ _map_state_play: List[List[int]] = [
 
 
 def update_state(
-    media_player: MediaPlayer, event: Event, data: PlayListData
+    media_player: AudioPlayer, event: Event, data: PlayListData
 ) -> None:
     current_state = media_player.current_state
 
@@ -248,7 +248,7 @@ def init_raylib() -> None:
     rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
 
-def get_layout(media_player: MediaPlayer) -> List[List[int]]:
+def get_layout(media_player: AudioPlayer) -> List[List[int]]:
     match media_player.current_state:
         case State.PLAYING | State.RESUMED:
             return _map_state_play
@@ -264,7 +264,7 @@ def get_layout(media_player: MediaPlayer) -> List[List[int]]:
             return _map_default
 
 
-def render_ui(media_player: MediaPlayer, data: PlayListData) -> None:
+def render_ui(media_player: AudioPlayer, data: PlayListData) -> None:
     layout = get_layout(media_player)
 
     width = pr.get_screen_width()
