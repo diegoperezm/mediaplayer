@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 # import resource
 import pyray as pr
@@ -46,13 +46,15 @@ class Element(Enum):
 
 @dataclass
 class PlayListData:
-    music: Optional[pr.Music] = None
+    music: pr.Music = pr.Music()
     file_paths: list = field(default_factory=list)
     file_path_counter: int = 0
     current_track_index: int = -1
     current_track_pos: float = pr.ffi.new("float *", 0.0)
     total_track_time: float = pr.ffi.new("float *", 0.0)
     current_vol_level: float = pr.ffi.new("float *", 0.3)
+    scroll: pr.Vector2 = pr.Vector2(0, 0)
+    view: pr.Rectangle = pr.Rectangle(0, 0, 0, 0)
 
 
 @dataclass
@@ -474,13 +476,6 @@ def render_el_drop_files(
         cell_x, cell_y, cell_width * 12, cell_height * 11
     )
 
-    if not hasattr(render_el_drop_files, "scroll"):
-        render_el_drop_files.scroll = pr.Vector2(0, 0)
-        render_el_drop_files.view = pr.Rectangle(0, 0, 0, 0)
-
-    scroll = render_el_drop_files.scroll
-    view = render_el_drop_files.view
-
     content_height = (
         ((data.file_path_counter * cell_height) + (cell_height * 2.0))
         if (data.file_path_counter * cell_height)
@@ -499,15 +494,18 @@ def render_el_drop_files(
         drop_files_bounds,
         b"Files",
         content,
-        scroll,
-        view,
+        data.scroll,
+        data.view,
     )
 
     pr.begin_scissor_mode(
-        int(view.x), int(view.y), int(view.width), int(view.height)
+        int(data.view.x),
+        int(data.view.y),
+        int(data.view.width),
+        int(data.view.height),
     )
     draw_file_list(
-        data, drop_files_bounds, scroll, cell_width, cell_height
+        data, drop_files_bounds, data.scroll, cell_width, cell_height
     )
     pr.end_scissor_mode()
 
