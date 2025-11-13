@@ -465,6 +465,21 @@ def render_el_volume_slider(
     )
 
 
+def get_content_height(
+    data: PlayListData,
+    cell_height: float,
+    drop_files_bounds: pr.Rectangle,
+) -> float:
+    if (
+        data.file_path_counter * cell_height
+    ) > drop_files_bounds.height:
+        return (data.file_path_counter * cell_height) + (
+            cell_height * 2
+        )
+    else:
+        return drop_files_bounds.height
+
+
 def render_el_drop_files(
     cell_x: float,
     cell_y: float,
@@ -476,11 +491,8 @@ def render_el_drop_files(
         cell_x, cell_y, cell_width * 12, cell_height * 11
     )
 
-    content_height = (
-        ((data.file_path_counter * cell_height) + (cell_height * 2.0))
-        if (data.file_path_counter * cell_height)
-        > drop_files_bounds.height
-        else drop_files_bounds.height
+    content_height = get_content_height(
+        data, cell_height, drop_files_bounds
     )
 
     content = pr.Rectangle(
