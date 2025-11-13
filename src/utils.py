@@ -202,24 +202,30 @@ def update_state(
             resume_track(data)
 
         case State.PAUSED:
-            pr.pause_music_stream(data.music)
+            if data.music is not None:
+                pr.pause_music_stream(data.music)
 
         case State.STOPPED:
-            pr.stop_music_stream(data.music)
-            data.current_track_pos[0] = pr.get_music_time_played(data.music)
-            pr.unload_music_stream(data.music)  # TODO: required?
+            if data.music is not None:
+                pr.stop_music_stream(data.music)
+                data.current_track_pos[0] = pr.get_music_time_played(data.music)
+                pr.unload_music_stream(data.music)  # TODO: required?
 
         case State.PREV:
             data.current_track_index = get_prev_track(data)
-            if pr.is_music_stream_playing(data.music):
+            if data.music is not None and pr.is_music_stream_playing(
+                data.music
+            ):
                 pr.unload_music_stream(data.music)
-            update_state(music_player, Event.play, data)
+                update_state(music_player, Event.play, data)
 
         case State.NEXT:
             data.current_track_index = get_next_track(data)
-            if pr.is_music_stream_playing(data.music):
+            if data.music is not None and pr.is_music_stream_playing(
+                data.music
+            ):
                 pr.unload_music_stream(data.music)
-            update_state(music_player, Event.play, data)
+                update_state(music_player, Event.play, data)
 
 
 def get_prev_track(data: PlayListData) -> int:
@@ -288,7 +294,11 @@ def render_ui(music_player: MusicPlayer, data: PlayListData) -> None:
                     clicked = render_el_btn_prev(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked and is_playlist_empty(data) is False:
+                    if (
+                        clicked
+                        and data.music is not None
+                        and is_playlist_empty(data) is False
+                    ):
                         update_state(music_player, Event.prev, data)
 
                 case Element.EL_BTN_PLAY.value:
@@ -324,7 +334,11 @@ def render_ui(music_player: MusicPlayer, data: PlayListData) -> None:
                     clicked = render_el_btn_next(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked and is_playlist_empty(data) is False:
+                    if (
+                        clicked
+                        and data.music is not None
+                        and is_playlist_empty(data) is False
+                    ):
                         update_state(music_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
