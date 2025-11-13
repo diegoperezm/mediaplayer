@@ -554,7 +554,7 @@ def add_file_to_playlist(data: PlayListData) -> None:
             )
             data.file_paths.append(path)
             data.file_path_counter += 1
-        if data.current_track_index is -1:
+        if data.current_track_index == -1:
             data.current_track_index = 0
         pr.unload_dropped_files(dropped_files)
 
@@ -562,6 +562,7 @@ def add_file_to_playlist(data: PlayListData) -> None:
 def load_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
     data.music = pr.load_music_stream(path.encode("utf-8"))
+    # check if playlist is empty?
     if data.music is None:
         print(f"Failed to load: {path}")
         return
@@ -569,6 +570,7 @@ def load_track(data: PlayListData) -> None:
 
 def play_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
+    # check if playlist is empty?
     if data.music is not None:
         pr.play_music_stream(data.music)
         print(f"Playing: {path}")
@@ -576,6 +578,7 @@ def play_track(data: PlayListData) -> None:
 
 def resume_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
+    # check if is playling?
     if data.music is not None:
         pr.resume_music_stream(data.music)
         print(f"Playing: {path}")
