@@ -48,7 +48,6 @@ class Element(Enum):
 class PlayListData:
     music: Optional[pr.Music] = None
     file_paths: list = field(default_factory=list)
-    file_path_counter: int = 0
     current_track_index: int = -1
     current_track_pos: float = pr.ffi.new("float *", 0.0)
     total_track_time: float = pr.ffi.new("float *", 0.0)
@@ -224,17 +223,17 @@ def update_state(
 
 
 def get_prev_track(data: PlayListData) -> int:
-    return (
-        data.current_track_index - 1 + data.file_path_counter
-    ) % data.file_path_counter
+    return (data.current_track_index - 1 + len(data.file_paths)) % len(
+        data.file_paths
+    )
 
 
 def get_next_track(data: PlayListData) -> int:
-    return (data.current_track_index + 1) % data.file_path_counter
+    return (data.current_track_index + 1) % len(data.file_paths)
 
 
 def is_playlist_empty(data: PlayListData) -> bool:
-    return data.file_path_counter <= 0
+    return len(data.file_paths) == 0
 
 
 def init_raylib() -> None:
@@ -448,8 +447,8 @@ def get_content_height(
     cell_height: float,
     bounds: pr.Rectangle,
 ) -> float:
-    if (data.file_path_counter * cell_height) > bounds.height:
-        return (data.file_path_counter * cell_height) + (cell_height * 2)
+    if (len(data.file_paths) * cell_height) > bounds.height:
+        return (len(data.file_paths) * cell_height) + (cell_height * 2)
     else:
         return bounds.height
 
@@ -497,7 +496,7 @@ def draw_file_list(
     cell_width: float,
     cell_height: float,
 ) -> None:
-    for i in range(data.file_path_counter):
+    for i in range(len(data.file_paths)):
         path = data.file_paths[i]
 
         if isinstance(path, str):
@@ -527,7 +526,6 @@ def add_file_to_playlist(data: PlayListData) -> None:
         for i in range(dropped_files.count):
             path = pr.ffi.string(dropped_files.paths[i]).decode("utf-8")
             data.file_paths.append(path)
-            data.file_path_counter += 1
         if data.current_track_index == -1:
             data.current_track_index = 0
         pr.unload_dropped_files(dropped_files)
@@ -542,7 +540,6 @@ def load_track(data: PlayListData) -> None:
 
 
 def play_track(data: PlayListData) -> None:
-    path = data.file_paths[data.current_track_index]
     # check if playlist is empty?
     if data.music is not None:
         pr.play_music_stream(data.music)
