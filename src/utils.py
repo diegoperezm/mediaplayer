@@ -174,18 +174,18 @@ _map_state_play: List[List[int]] = [
 
 
 def update_state(
-    media_player: AudioPlayer, event: Event, data: PlayListData
+    audio_player: AudioPlayer, event: Event, data: PlayListData
 ) -> None:
-    current_state = media_player.current_state
+    current_state = audio_player.current_state
 
     next_state = transition_table[current_state].get(
         event, State.INVALID
     )
 
     if next_state is not State.INVALID:
-        media_player.current_state = next_state
+        audio_player.current_state = next_state
         print(
-            f"current state: {current_state.name} -> next state: {media_player.current_state}"
+            f"current state: {current_state.name} -> next state: {audio_player.current_state}"
         )
     else:
         print(
@@ -216,13 +216,13 @@ def update_state(
             data.current_track_index = get_prev_track(data)
             if pr.is_music_stream_playing(data.music):
                 pr.unload_music_stream(data.music)
-            update_state(media_player, Event.play, data)
+            update_state(audio_player, Event.play, data)
 
         case State.NEXT:
             data.current_track_index = get_next_track(data)
             if pr.is_music_stream_playing(data.music):
                 pr.unload_music_stream(data.music)
-            update_state(media_player, Event.play, data)
+            update_state(audio_player, Event.play, data)
 
 
 def get_prev_track(data: PlayListData) -> int:
@@ -248,8 +248,8 @@ def init_raylib() -> None:
     rl.GuiLoadStyle(b"assets/style_cyber.rgs")
 
 
-def get_layout(media_player: AudioPlayer) -> List[List[int]]:
-    match media_player.current_state:
+def get_layout(audio_player: AudioPlayer) -> List[List[int]]:
+    match audio_player.current_state:
         case State.PLAYING | State.RESUMED:
             return _map_state_play
         case (
@@ -264,8 +264,8 @@ def get_layout(media_player: AudioPlayer) -> List[List[int]]:
             return _map_default
 
 
-def render_ui(media_player: AudioPlayer, data: PlayListData) -> None:
-    layout = get_layout(media_player)
+def render_ui(audio_player: AudioPlayer, data: PlayListData) -> None:
+    layout = get_layout(audio_player)
 
     width = pr.get_screen_width()
     height = pr.get_screen_height()
@@ -292,14 +292,14 @@ def render_ui(media_player: AudioPlayer, data: PlayListData) -> None:
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked and is_playlist_empty(data) is False:
-                        update_state(media_player, Event.prev, data)
+                        update_state(audio_player, Event.prev, data)
 
                 case Element.EL_BTN_PLAY.value:
                     clicked = render_el_btn_play(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked and is_playlist_empty(data) is False:
-                        update_state(media_player, Event.play, data)
+                        update_state(audio_player, Event.play, data)
 
                 case Element.EL_BTN_PAUSE.value:
                     clicked = render_el_btn_pause(
@@ -310,7 +310,7 @@ def render_ui(media_player: AudioPlayer, data: PlayListData) -> None:
                         and data.music is not None
                         and pr.is_music_stream_playing(data.music)
                     ):
-                        update_state(media_player, Event.pause, data)
+                        update_state(audio_player, Event.pause, data)
 
                 case Element.EL_BTN_STOP.value:
                     clicked = render_el_btn_stop(
@@ -321,14 +321,14 @@ def render_ui(media_player: AudioPlayer, data: PlayListData) -> None:
                         and data.music is not None
                         and pr.is_music_stream_playing(data.music)
                     ):
-                        update_state(media_player, Event.stop, data)
+                        update_state(audio_player, Event.stop, data)
 
                 case Element.EL_BTN_NEXT.value:
                     clicked = render_el_btn_next(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked and is_playlist_empty(data) is False:
-                        update_state(media_player, Event.next, data)
+                        update_state(audio_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
                     render_el_volume_slider(

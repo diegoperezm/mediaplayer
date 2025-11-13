@@ -14,7 +14,7 @@ from utils import (
 def main() -> None:
     init_raylib()
     pr.init_audio_device()
-    media_player: AudioPlayer = AudioPlayer(State.WAITING)
+    audio_player: AudioPlayer = AudioPlayer(State.WAITING)
     data: PlayListData = PlayListData()
 
     while not pr.window_should_close():
@@ -24,7 +24,7 @@ def main() -> None:
         update_music_stream_if_needed(data)
         pr.begin_drawing()
         pr.clear_background(BGCOLOR)
-        render_ui(media_player, data)
+        render_ui(audio_player, data)
         pr.end_drawing()
 
     pr.close_audio_device()
