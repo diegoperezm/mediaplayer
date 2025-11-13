@@ -50,7 +50,7 @@ class PlayListData:
     file_paths: list = field(default_factory=list)
     current_track_index: int = -1
     current_track_pos: float = pr.ffi.new("float *", 0.0)
-    total_track_time: float = pr.ffi.new("float *", 0.0)
+    total_track_time: float = pr.ffi.new("float *", 1.0)
     current_vol_level: float = pr.ffi.new("float *", 0.3)
     scroll: pr.Vector2 = pr.Vector2(0, 0)
     view: pr.Rectangle = pr.Rectangle(0, 0, 0, 0)
