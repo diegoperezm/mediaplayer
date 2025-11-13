@@ -114,9 +114,7 @@ transition_table: Dict[State, Dict[Event, State]] = {
     },
 }
 
-_map_default: List[List[int]] = [
-    [0] * SIZE_COLS for _ in range(SIZE_ROWS)
-]
+_map_default: List[List[int]] = [[0] * SIZE_COLS for _ in range(SIZE_ROWS)]
 
 _map_state_waiting: List[List[int]] = [
     [Element.EL_DROP_FILES.value, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -180,9 +178,7 @@ def update_state(
 ) -> None:
     current_state = music_player.current_state
 
-    next_state = transition_table[current_state].get(
-        event, State.INVALID
-    )
+    next_state = transition_table[current_state].get(event, State.INVALID)
 
     if next_state is not State.INVALID:
         music_player.current_state = next_state
@@ -190,9 +186,7 @@ def update_state(
             f"current state: {current_state.name} -> next state: {music_player.current_state}"
         )
     else:
-        print(
-            f"Invalid transition: {event.name} from {current_state.name}"
-        )
+        print(f"Invalid transition: {event.name} from {current_state.name}")
 
     match next_state:
         case State.WAITING:
@@ -209,9 +203,7 @@ def update_state(
 
         case State.STOPPED:
             pr.stop_music_stream(data.music)
-            data.current_track_pos[0] = pr.get_music_time_played(
-                data.music
-            )
+            data.current_track_pos[0] = pr.get_music_time_played(data.music)
             pr.unload_music_stream(data.music)  # TODO: required?
 
         case State.PREV:
@@ -354,22 +346,14 @@ def render_el_progress_bar(
     cell_height: float,
     data: PlayListData,
 ) -> None:
-    progress_bar_bounds = pr.Rectangle(
-        cell_x, cell_y, cell_width * 8, cell_height / 2
-    )
+    bounds = pr.Rectangle(cell_x, cell_y, cell_width * 8, cell_height / 2)
 
-    if data.music is not None and pr.is_music_stream_playing(
-        data.music
-    ):
-        data.current_track_pos[0] = pr.get_music_time_played(
-            data.music
-        )
-        data.total_track_time[0] = pr.get_music_time_length(
-            data.music
-        )
+    if data.music is not None and pr.is_music_stream_playing(data.music):
+        data.current_track_pos[0] = pr.get_music_time_played(data.music)
+        data.total_track_time[0] = pr.get_music_time_length(data.music)
 
     pr.gui_progress_bar(
-        progress_bar_bounds,
+        bounds,
         b"",
         b"",
         data.current_track_pos,
@@ -384,11 +368,9 @@ def render_el_btn_prev(
     cell_width: float,
     cell_height: float,
 ) -> bool:
-    control_btn_bounds = pr.Rectangle(
-        cell_x, cell_y, cell_width, cell_height
-    )
+    bounds = pr.Rectangle(cell_x, cell_y, cell_width, cell_height)
 
-    return pr.gui_button(control_btn_bounds, b"<<")
+    return pr.gui_button(bounds, b"<<")
 
 
 def render_el_btn_play(
@@ -397,11 +379,9 @@ def render_el_btn_play(
     cell_width: float,
     cell_height: float,
 ) -> bool:
-    control_btn_bounds = pr.Rectangle(
-        cell_x, cell_y, cell_width, cell_height
-    )
+    bounds = pr.Rectangle(cell_x, cell_y, cell_width, cell_height)
 
-    return pr.gui_button(control_btn_bounds, b">")
+    return pr.gui_button(bounds, b">")
 
 
 def render_el_btn_pause(
@@ -410,11 +390,9 @@ def render_el_btn_pause(
     cell_width: float,
     cell_height: float,
 ) -> bool:
-    control_btn_bounds = pr.Rectangle(
-        cell_x, cell_y, cell_width, cell_height
-    )
+    bounds = pr.Rectangle(cell_x, cell_y, cell_width, cell_height)
 
-    return pr.gui_button(control_btn_bounds, b"||")
+    return pr.gui_button(bounds, b"||")
 
 
 def render_el_btn_stop(
@@ -423,11 +401,9 @@ def render_el_btn_stop(
     cell_width: float,
     cell_height: float,
 ) -> bool:
-    control_btn_bounds = pr.Rectangle(
-        cell_x, cell_y, cell_width, cell_height
-    )
+    bounds = pr.Rectangle(cell_x, cell_y, cell_width, cell_height)
 
-    return pr.gui_button(control_btn_bounds, b"[]")
+    return pr.gui_button(bounds, b"[]")
 
 
 def render_el_btn_next(
@@ -436,11 +412,9 @@ def render_el_btn_next(
     cell_width: float,
     cell_height: float,
 ) -> bool:
-    control_btn_bounds = pr.Rectangle(
-        cell_x, cell_y, cell_width, cell_height
-    )
+    bounds = pr.Rectangle(cell_x, cell_y, cell_width, cell_height)
 
-    return pr.gui_button(control_btn_bounds, b">>")
+    return pr.gui_button(bounds, b">>")
 
 
 def render_el_volume_slider(
@@ -450,7 +424,7 @@ def render_el_volume_slider(
     cell_height: float,
     data: PlayListData,
 ) -> None:
-    volume_bar_bounds = pr.Rectangle(
+    bounds = pr.Rectangle(
         cell_x,
         cell_y + (cell_height / 2),
         cell_width * 7,
@@ -460,24 +434,18 @@ def render_el_volume_slider(
     if data.music is not None:
         pr.set_music_volume(data.music, data.current_vol_level[0])
 
-    pr.gui_slider(
-        volume_bar_bounds, b"VOL ", b"", data.current_vol_level, 0, 1
-    )
+    pr.gui_slider(bounds, b"VOL ", b"", data.current_vol_level, 0, 1)
 
 
 def get_content_height(
     data: PlayListData,
     cell_height: float,
-    drop_files_bounds: pr.Rectangle,
+    bounds: pr.Rectangle,
 ) -> float:
-    if (
-        data.file_path_counter * cell_height
-    ) > drop_files_bounds.height:
-        return (data.file_path_counter * cell_height) + (
-            cell_height * 2
-        )
+    if (data.file_path_counter * cell_height) > bounds.height:
+        return (data.file_path_counter * cell_height) + (cell_height * 2)
     else:
-        return drop_files_bounds.height
+        return bounds.height
 
 
 def render_el_drop_files(
@@ -487,23 +455,19 @@ def render_el_drop_files(
     cell_height: float,
     data: PlayListData,
 ) -> None:
-    drop_files_bounds = pr.Rectangle(
-        cell_x, cell_y, cell_width * 12, cell_height * 11
-    )
+    bounds = pr.Rectangle(cell_x, cell_y, cell_width * 12, cell_height * 11)
 
-    content_height = get_content_height(
-        data, cell_height, drop_files_bounds
-    )
+    content_height = get_content_height(data, cell_height, bounds)
 
     content = pr.Rectangle(
-        drop_files_bounds.x,
-        drop_files_bounds.y,
-        drop_files_bounds.width,
+        bounds.x,
+        bounds.y,
+        bounds.width,
         content_height,
     )
 
     pr.gui_scroll_panel(
-        drop_files_bounds,
+        bounds,
         b"Files",
         content,
         data.scroll,
@@ -516,9 +480,7 @@ def render_el_drop_files(
         int(data.view.width),
         int(data.view.height),
     )
-    draw_file_list(
-        data, drop_files_bounds, data.scroll, cell_width, cell_height
-    )
+    draw_file_list(data, bounds, data.scroll, cell_width, cell_height)
     pr.end_scissor_mode()
 
 
@@ -549,9 +511,7 @@ def draw_file_list(
             pr.fade(pr.YELLOW, 0.0),
         )
 
-        color = (
-            pr.YELLOW if i == data.current_track_index else pr.WHITE
-        )
+        color = pr.YELLOW if i == data.current_track_index else pr.WHITE
         pr.draw_text(file_name, x, y, int(cell_height / 1.5), color)
 
 
@@ -559,9 +519,7 @@ def add_file_to_playlist(data: PlayListData) -> None:
     if pr.is_file_dropped():
         dropped_files = pr.load_dropped_files()
         for i in range(dropped_files.count):
-            path = pr.ffi.string(dropped_files.paths[i]).decode(
-                "utf-8"
-            )
+            path = pr.ffi.string(dropped_files.paths[i]).decode("utf-8")
             data.file_paths.append(path)
             data.file_path_counter += 1
         if data.current_track_index == -1:
@@ -595,9 +553,7 @@ def resume_track(data: PlayListData) -> None:
 
 
 def update_music_stream_if_needed(data: PlayListData) -> None:
-    if data.music is not None and pr.is_music_stream_playing(
-        data.music
-    ):
+    if data.music is not None and pr.is_music_stream_playing(data.music):
         pr.update_music_stream(data.music)
 
 

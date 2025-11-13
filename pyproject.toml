@@ -1,6 +1,6 @@
 [tool.ruff]
 # Reemplaza a flake8, isort, pyflakes, etc.
-line-length = 70
+line-length = 80
 target-version = "py311"
 fix = true
 show-fixes = true
