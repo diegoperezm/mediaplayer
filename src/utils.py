@@ -44,7 +44,7 @@ class Element(Enum):
 
 
 @dataclass
-class PlayListData:
+class PlaylistData:
     music: Optional[Music] = None
     file_paths: list = field(default_factory=list)
     current_track_index: int = -1
@@ -56,7 +56,7 @@ class PlayListData:
 
 
 @dataclass
-class MusicPlayer:
+class Mp3Player:
     current_state: State = State.WAITING
 
 
@@ -172,9 +172,9 @@ _map_state_play: List[List[int]] = [
 
 
 def update_state(
-    music_player: MusicPlayer, event: Event, data: PlayListData
+    mp3_player: Mp3Player, event: Event, data: PlaylistData
 ) -> None:
-    current_state = music_player.current_state
+    current_state = mp3_player.current_state
 
     # Guard: si la playlist está vacía, no permitir play/pause/stop/next/prev
     if is_playlist_empty(data) and event in (
@@ -210,11 +210,11 @@ def update_state(
         )
         return
 
-    music_player.current_state = next_state
+    mp3_player.current_state = next_state
 
     trace_log(
         LOG_INFO,
-        f"current state: {current_state.name} -> next state: {music_player.current_state.name}",
+        f"current state: {current_state.name} -> next state: {mp3_player.current_state.name}",
     )
 
     match next_state:
@@ -242,29 +242,29 @@ def update_state(
             data.current_track_index = get_prev_track(data)
             if data.music is not None and is_music_stream_playing(data.music):
                 unload_music_stream(data.music)
-            update_state(music_player, Event.play, data)
+            update_state(mp3_player, Event.play, data)
 
         case State.NEXT:
             data.current_track_index = get_next_track(data)
             if data.music is not None and is_music_stream_playing(data.music):
                 unload_music_stream(data.music)
-            update_state(music_player, Event.play, data)
+            update_state(mp3_player, Event.play, data)
 
         case _:
             trace_log(LOG_WARNING, f"Estado desconocido: {next_state.name}")
 
 
-def get_prev_track(data: PlayListData) -> int:
+def get_prev_track(data: PlaylistData) -> int:
     return (data.current_track_index - 1 + len(data.file_paths)) % len(
         data.file_paths
     )
 
 
-def get_next_track(data: PlayListData) -> int:
+def get_next_track(data: PlaylistData) -> int:
     return (data.current_track_index + 1) % len(data.file_paths)
 
 
-def is_playlist_empty(data: PlayListData) -> bool:
+def is_playlist_empty(data: PlaylistData) -> bool:
     return len(data.file_paths) <= 0
 
 
@@ -277,8 +277,8 @@ def init_raylib() -> None:
     GuiLoadStyle(b"assets/style_cyber.rgs")
 
 
-def get_layout(music_player: MusicPlayer) -> List[List[int]]:
-    match music_player.current_state:
+def get_layout(mp3_player: Mp3Player) -> List[List[int]]:
+    match mp3_player.current_state:
         case State.PLAYING | State.RESUMED:
             return _map_state_play
         case (
@@ -293,8 +293,8 @@ def get_layout(music_player: MusicPlayer) -> List[List[int]]:
             return _map_default
 
 
-def render_ui(music_player: MusicPlayer, data: PlayListData) -> None:
-    layout = get_layout(music_player)
+def render_ui(mp3_player: Mp3Player, data: PlaylistData) -> None:
+    layout = get_layout(mp3_player)
 
     width = get_screen_width()
     height = get_screen_height()
@@ -321,35 +321,35 @@ def render_ui(music_player: MusicPlayer, data: PlayListData) -> None:
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked:
-                        update_state(music_player, Event.prev, data)
+                        update_state(mp3_player, Event.prev, data)
 
                 case Element.EL_BTN_PLAY.value:
                     clicked = render_el_btn_play(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked:
-                        update_state(music_player, Event.play, data)
+                        update_state(mp3_player, Event.play, data)
 
                 case Element.EL_BTN_PAUSE.value:
                     clicked = render_el_btn_pause(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked:
-                        update_state(music_player, Event.pause, data)
+                        update_state(mp3_player, Event.pause, data)
 
                 case Element.EL_BTN_STOP.value:
                     clicked = render_el_btn_stop(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked:
-                        update_state(music_player, Event.stop, data)
+                        update_state(mp3_player, Event.stop, data)
 
                 case Element.EL_BTN_NEXT.value:
                     clicked = render_el_btn_next(
                         cell_x, cell_y, cell_width, cell_height
                     )
                     if clicked:
-                        update_state(music_player, Event.next, data)
+                        update_state(mp3_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
                     render_el_volume_slider(
@@ -371,7 +371,7 @@ def render_el_progress_bar(
     cell_y: float,
     cell_width: float,
     cell_height: float,
-    data: PlayListData,
+    data: PlaylistData,
 ) -> None:
     bounds = Rectangle(cell_x, cell_y, cell_width * 8, cell_height / 2)
 
@@ -451,7 +451,7 @@ def render_el_volume_slider(
     cell_y: float,
     cell_width: float,
     cell_height: float,
-    data: PlayListData,
+    data: PlaylistData,
 ) -> None:
     bounds = Rectangle(
         cell_x,
@@ -467,7 +467,7 @@ def render_el_volume_slider(
 
 
 def get_content_height(
-    data: PlayListData,
+    data: PlaylistData,
     cell_height: float,
     bounds: Rectangle,
 ) -> float:
@@ -482,7 +482,7 @@ def render_el_drop_files(
     cell_y: float,
     cell_width: float,
     cell_height: float,
-    data: PlayListData,
+    data: PlaylistData,
 ) -> None:
     bounds = Rectangle(cell_x, cell_y, cell_width * 12, cell_height * 11)
 
@@ -514,7 +514,7 @@ def render_el_drop_files(
 
 
 def render_file_list(
-    data: PlayListData,
+    data: PlaylistData,
     bounds: Rectangle,
     scroll: Vector2,
     cell_width: float,
@@ -544,7 +544,7 @@ def render_file_list(
         draw_text(file_name, x, y, int(cell_height / 1.5), color)
 
 
-def add_file_to_playlist(data: PlayListData) -> None:
+def add_file_to_playlist(data: PlaylistData) -> None:
     if is_file_dropped():
         dropped_files = load_dropped_files()
         for i in range(dropped_files.count):
@@ -555,7 +555,7 @@ def add_file_to_playlist(data: PlayListData) -> None:
         unload_dropped_files(dropped_files)
 
 
-def load_track(data: PlayListData) -> None:
+def load_track(data: PlaylistData) -> None:
     path = data.file_paths[data.current_track_index]
     data.music = load_music_stream(path.encode("utf-8"))
     if data.music is not None:
@@ -564,7 +564,7 @@ def load_track(data: PlayListData) -> None:
         trace_log(LOG_WARNING, f"Failed to load: {path}")
 
 
-def play_track(data: PlayListData) -> None:
+def play_track(data: PlaylistData) -> None:
     path = data.file_paths[data.current_track_index]
     if data.music is not None:
         play_music_stream(data.music)
@@ -573,7 +573,7 @@ def play_track(data: PlayListData) -> None:
         trace_log(LOG_WARNING, f"Failed to play track: {path}")
 
 
-def resume_track(data: PlayListData) -> None:
+def resume_track(data: PlaylistData) -> None:
     path = data.file_paths[data.current_track_index]
     if data.music is not None:
         resume_music_stream(data.music)
@@ -582,7 +582,7 @@ def resume_track(data: PlayListData) -> None:
         trace_log(LOG_WARNING, f"Failed to resume track: {path}")
 
 
-def update_music_stream_if_needed(data: PlayListData) -> None:
+def update_music_stream_if_needed(data: PlaylistData) -> None:
     if data.music is not None and is_music_stream_playing(data.music):
         update_music_stream(data.music)
 

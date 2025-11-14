@@ -4,8 +4,8 @@ from utils import *
 def main() -> None:
     init_raylib()
     init_audio_device()
-    music_player: MusicPlayer = MusicPlayer(State.WAITING)
-    data: PlayListData = PlayListData()
+    mp3_player: MusicPlayer = Mp3Player(State.WAITING)
+    data: PlaylistData = PlaylistData()
 
     while not window_should_close():
         if is_file_dropped():
@@ -14,7 +14,7 @@ def main() -> None:
         update_music_stream_if_needed(data)
         begin_drawing()
         clear_background(BGCOLOR)
-        render_ui(music_player, data)
+        render_ui(mp3_player, data)
         end_drawing()
 
     close_audio_device()
