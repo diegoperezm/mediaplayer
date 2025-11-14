@@ -240,20 +240,18 @@ def update_state(
 
         case State.PREV:
             data.current_track_index = get_prev_track(data)
-            # Si había música sonando, descargarla y reproducir la nueva pista
             if data.music is not None and is_music_stream_playing(data.music):
                 unload_music_stream(data.music)
             update_state(music_player, Event.play, data)
 
         case State.NEXT:
             data.current_track_index = get_next_track(data)
-            # Si había música sonando, descargarla y reproducir la nueva pista
             if data.music is not None and is_music_stream_playing(data.music):
                 unload_music_stream(data.music)
             update_state(music_player, Event.play, data)
 
         case _:
-            trace_log(LOG_WARNING, f"Estado sin manejador: {next_state.name}")
+            trace_log(LOG_WARNING, f"Estado desconocido: {next_state.name}")
 
 
 def get_prev_track(data: PlayListData) -> int:
@@ -267,7 +265,7 @@ def get_next_track(data: PlayListData) -> int:
 
 
 def is_playlist_empty(data: PlayListData) -> bool:
-    return len(data.file_paths) == 0
+    return len(data.file_paths) <= 0
 
 
 def init_raylib() -> None:
@@ -560,7 +558,9 @@ def add_file_to_playlist(data: PlayListData) -> None:
 def load_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
     data.music = load_music_stream(path.encode("utf-8"))
-    if data.music is None:
+    if data.music is not None:
+        trace_log(LOG_INFO, f"Loaded: {path}")
+    else:
         trace_log(LOG_WARNING, f"Failed to load: {path}")
 
 
@@ -569,13 +569,17 @@ def play_track(data: PlayListData) -> None:
     if data.music is not None:
         play_music_stream(data.music)
         trace_log(LOG_INFO, f"Playing: {path}")
+    else:
+        trace_log(LOG_WARNING, f"Failed to play track: {path}")
 
 
 def resume_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
     if data.music is not None:
         resume_music_stream(data.music)
-        trace_log(LOG_INFO, f"Playing: {path}")
+        trace_log(LOG_INFO, f"Resumed: {path}")
+    else:
+        trace_log(LOG_WARNING, f"Failed to resume track: {path}")
 
 
 def update_music_stream_if_needed(data: PlayListData) -> None:
