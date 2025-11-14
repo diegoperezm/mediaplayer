@@ -210,7 +210,7 @@ def update_state(
             if data.music is not None:
                 stop_music_stream(data.music)
                 data.current_track_pos[0] = get_music_time_played(data.music)
-                unload_music_stream(data.music)  # TODO: required?
+
 
         case State.PREV:
             data.current_track_index = get_prev_track(data)
