@@ -2,10 +2,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional
 
-# import resource
-from pyray import * 
-from raylib import * 
-
+from pyray import *
+from raylib import *
 
 GRID_COLS = 12
 GRID_ROWS = 12
@@ -178,29 +176,58 @@ def update_state(
 ) -> None:
     current_state = music_player.current_state
 
-    next_state = transition_table[current_state].get(event, State.INVALID)
-
-    if next_state is not State.INVALID:
-        music_player.current_state = next_state
+    # Guard: si la playlist está vacía, no permitir play/pause/stop/next/prev
+    if is_playlist_empty(data) and event in (
+        Event.play,
+        Event.pause,
+        Event.stop,
+        Event.next,
+        Event.prev,
+    ):
         trace_log(
             LOG_INFO,
-            f"current state: {current_state.name} -> next state: {music_player.current_state.name}",
+            f"Ignorando {event.name}: playlist vacía, current state: {current_state.name}",
         )
-    else:
+        return
+
+    # Guard: pause/stop requieren que haya una reproducción activa
+    if event in (Event.pause, Event.stop):
+        if data.music is None or not is_music_stream_playing(data.music):
+            trace_log(
+                LOG_INFO,
+                f"Ignorando {event.name}: no hay reproducción activa, current state: {current_state.name}",
+            )
+            return
+
+    next_state = transition_table.get(current_state, {}).get(
+        event, State.INVALID
+    )
+
+    if next_state is State.INVALID:
         trace_log(
             LOG_WARNING,
-            f"Invalid transition: {event.name} from {current_state.name}",
+            f"Transición inválida: {event.name} desde {current_state.name}",
         )
+        return
+
+    music_player.current_state = next_state
+
+    trace_log(
+        LOG_INFO,
+        f"current state: {current_state.name} -> next state: {music_player.current_state.name}",
+    )
 
     match next_state:
         case State.WAITING:
             pass
+
         case State.PLAYING:
             load_track(data)
             play_track(data)
 
         case State.RESUMED:
-            resume_track(data)
+            if data.music is not None:
+                resume_track(data)
 
         case State.PAUSED:
             if data.music is not None:
@@ -211,22 +238,22 @@ def update_state(
                 stop_music_stream(data.music)
                 data.current_track_pos[0] = get_music_time_played(data.music)
 
-
         case State.PREV:
             data.current_track_index = get_prev_track(data)
-            if data.music is not None and is_music_stream_playing(
-                data.music
-            ):
+            # Si había música sonando, descargarla y reproducir la nueva pista
+            if data.music is not None and is_music_stream_playing(data.music):
                 unload_music_stream(data.music)
-                update_state(music_player, Event.play, data)
+            update_state(music_player, Event.play, data)
 
         case State.NEXT:
             data.current_track_index = get_next_track(data)
-            if data.music is not None and is_music_stream_playing(
-                data.music
-            ):
+            # Si había música sonando, descargarla y reproducir la nueva pista
+            if data.music is not None and is_music_stream_playing(data.music):
                 unload_music_stream(data.music)
-                update_state(music_player, Event.play, data)
+            update_state(music_player, Event.play, data)
+
+        case _:
+            trace_log(LOG_WARNING, f"Estado sin manejador: {next_state.name}")
 
 
 def get_prev_track(data: PlayListData) -> int:
@@ -295,51 +322,35 @@ def render_ui(music_player: MusicPlayer, data: PlayListData) -> None:
                     clicked = render_el_btn_prev(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if (
-                        clicked
-                        and data.music is not None
-                        and is_playlist_empty(data) is False
-                    ):
+                    if clicked:
                         update_state(music_player, Event.prev, data)
 
                 case Element.EL_BTN_PLAY.value:
                     clicked = render_el_btn_play(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if clicked and is_playlist_empty(data) is False:
+                    if clicked:
                         update_state(music_player, Event.play, data)
 
                 case Element.EL_BTN_PAUSE.value:
                     clicked = render_el_btn_pause(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if (
-                        clicked
-                        and data.music is not None
-                        and is_music_stream_playing(data.music)
-                    ):
+                    if clicked:
                         update_state(music_player, Event.pause, data)
 
                 case Element.EL_BTN_STOP.value:
                     clicked = render_el_btn_stop(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if (
-                        clicked
-                        and data.music is not None
-                        and is_music_stream_playing(data.music)
-                    ):
+                    if clicked:
                         update_state(music_player, Event.stop, data)
 
                 case Element.EL_BTN_NEXT.value:
                     clicked = render_el_btn_next(
                         cell_x, cell_y, cell_width, cell_height
                     )
-                    if (
-                        clicked
-                        and data.music is not None
-                        and is_playlist_empty(data) is False
-                    ):
+                    if clicked:
                         update_state(music_player, Event.next, data)
 
                 case Element.EL_VOLUME_SLIDER.value:
@@ -549,23 +560,22 @@ def add_file_to_playlist(data: PlayListData) -> None:
 def load_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
     data.music = load_music_stream(path.encode("utf-8"))
-    # check if playlist is empty?
     if data.music is None:
         trace_log(LOG_WARNING, f"Failed to load: {path}")
 
 
 def play_track(data: PlayListData) -> None:
-    # check if playlist is empty?
+    path = data.file_paths[data.current_track_index]
     if data.music is not None:
         play_music_stream(data.music)
+        trace_log(LOG_INFO, f"Playing: {path}")
 
 
 def resume_track(data: PlayListData) -> None:
     path = data.file_paths[data.current_track_index]
-    # check if is playling?
     if data.music is not None:
         resume_music_stream(data.music)
-        print(f"Playing: {path}")
+        trace_log(LOG_INFO, f"Playing: {path}")
 
 
 def update_music_stream_if_needed(data: PlayListData) -> None:

@@ -1,4 +1,5 @@
-from utils import * 
+from utils import *
+
 
 def main() -> None:
     init_raylib()
