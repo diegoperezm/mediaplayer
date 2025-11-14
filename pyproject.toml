@@ -1,3 +1,17 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mediaplayer"
+version = "0.1.0"
+requires-python = ">=3.11.0, <3.14.0"
+dependencies = [
+    "raylib==5.5.0.3",
+    "cffi>=2.0",
+]
+
+
 [tool.ruff]
 # Reemplaza a flake8, isort, pyflakes, etc.
 line-length = 80
