@@ -63,20 +63,14 @@ class Mp3Player:
 transition_table: Dict[State, Dict[Event, State]] = {
     State.WAITING: {
         Event.play: State.PLAYING,
-        Event.pause: State.INVALID,
-        Event.stop: State.INVALID,
-        Event.prev: State.INVALID,
-        Event.next: State.INVALID,
     },
     State.PLAYING: {
-        Event.play: State.INVALID,
         Event.pause: State.PAUSED,
         Event.stop: State.STOPPED,
         Event.prev: State.PREV,
         Event.next: State.NEXT,
     },
     State.RESUMED: {
-        Event.play: State.INVALID,
         Event.pause: State.PAUSED,
         Event.stop: State.STOPPED,
         Event.prev: State.PREV,
@@ -84,31 +78,20 @@ transition_table: Dict[State, Dict[Event, State]] = {
     },
     State.PAUSED: {
         Event.play: State.RESUMED,
-        Event.pause: State.INVALID,
         Event.stop: State.STOPPED,
         Event.prev: State.PREV,
         Event.next: State.NEXT,
     },
     State.STOPPED: {
         Event.play: State.PLAYING,
-        Event.pause: State.INVALID,
-        Event.stop: State.INVALID,
         Event.prev: State.PREV,
         Event.next: State.NEXT,
     },
     State.PREV: {
         Event.play: State.PLAYING,
-        Event.pause: State.INVALID,
-        Event.stop: State.INVALID,
-        Event.prev: State.INVALID,
-        Event.next: State.INVALID,
     },
     State.NEXT: {
         Event.play: State.PLAYING,
-        Event.pause: State.INVALID,
-        Event.stop: State.INVALID,
-        Event.prev: State.INVALID,
-        Event.next: State.INVALID,
     },
 }
 
@@ -199,11 +182,9 @@ def update_state(
             )
             return
 
-    next_state = transition_table.get(current_state, {}).get(
-        event, State.INVALID
-    )
+    next_state = transition_table.get(current_state, {}).get(event)
 
-    if next_state is State.INVALID:
+    if next_state is None:
         trace_log(
             LOG_WARNING,
             f"Transición inválida: {event.name} desde {current_state.name}",
